@@ -1,37 +1,23 @@
 // ARQUIVO: js/auth.js
 import { auth, db } from './firebase-config.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    updateProfile 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// === 1. LISTA DE PROFESSORES ===
+// Coloque aqui os e-mails que devem ter acesso ao painel de professor
+const ADMIN_EMAILS = [
+    "abneroliveira19072004@gmail.com",
+    "professor@exemplo.com"
+];
+
+// Elementos da tela
 const errorMsg = document.getElementById('auth-error');
-
-// Alternar entre telas de login e cadastro na index.html
-const btnToggleAuth = document.getElementById('btn-toggle-auth');
-if (btnToggleAuth) {
-    btnToggleAuth.addEventListener('click', () => {
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const authTitle = document.getElementById('auth-title');
-        const authSubtitle = document.getElementById('auth-subtitle');
-        const toggleText = document.getElementById('toggle-text');
-
-        if (loginForm.style.display === 'none') {
-            loginForm.style.display = 'block';
-            registerForm.style.display = 'none';
-            authTitle.innerText = "Entrar";
-            authSubtitle.innerText = "Bem-vindo de volta à sua área de estudos.";
-            toggleText.innerHTML = 'Não tem uma conta? <button type="button" id="btn-toggle-auth" class="btn-link">Cadastre-se</button>';
-        } else {
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
-            authTitle.innerText = "Criar Conta";
-            authSubtitle.innerText = "Inicie sua jornada de aprendizado.";
-            toggleText.innerHTML = 'Já tem uma conta? <button type="button" id="btn-toggle-auth" class="btn-link">Entrar</button>';
-        }
-        // Recria o evento após re-renderizar o botão
-        document.getElementById('btn-toggle-auth').addEventListener('click', btnToggleAuth.click.bind(btnToggleAuth));
-    });
-}
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form'); // Assumindo que você tem o form de cadastro na tela
 
 function showError(msg) {
     if (errorMsg) {
@@ -40,6 +26,7 @@ function showError(msg) {
     }
 }
 
+// === 2. REDIRECIONAMENTO ===
 async function redirecionar(uid) {
     try {
         const docSnap = await getDoc(doc(db, "users", uid));
@@ -49,63 +36,79 @@ async function redirecionar(uid) {
             window.location.href = "aluno_dashboard.html";
         }
     } catch (e) {
-        showError("Erro ao verificar permissões. Verifique as regras do Firestore.");
+        showError("Erro ao acessar permissões. Verifique as regras do banco de dados.");
     }
 }
 
-// Lógica de Login
-const loginForm = document.getElementById('login-form');
+// === 3. LÓGICA DE LOGIN ===
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const btn = document.getElementById('btn-login');
-        btn.innerText = "Aguarde..."; 
-        btn.disabled = true; 
+        const btnLogin = document.getElementById('btn-login');
+        btnLogin.innerText = "Aguarde..."; 
+        btnLogin.disabled = true; 
         if (errorMsg) errorMsg.classList.remove('active');
 
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-password').value;
+
         try {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
             const userCredential = await signInWithEmailAndPassword(auth, email, pass);
             await redirecionar(userCredential.user.uid);
         } catch (error) {
-            showError("Falha no login. Verifique seu e-mail e senha.");
-            btn.innerText = "Entrar"; 
-            btn.disabled = false;
+            showError("E-mail ou senha incorretos.");
+            btnLogin.innerText = "Entrar"; 
+            btnLogin.disabled = false;
         }
     });
 }
 
-// Lógica de Cadastro
-const registerForm = document.getElementById('register-form');
+// === 4. LÓGICA DE CADASTRO COM DIFERENCIAÇÃO ===
 if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const nome = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value;
-        const pass = document.getElementById('reg-password').value;
-        const btn = document.getElementById('btn-register');
-
-        btn.innerText = "Criando..."; 
-        btn.disabled = true; 
+        const btnRegister = document.getElementById('btn-register'); // Assumindo o ID do botão de cadastro
+        btnRegister.innerText = "Criando..."; 
+        btnRegister.disabled = true; 
         if (errorMsg) errorMsg.classList.remove('active');
 
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-            await updateProfile(userCredential.user, { displayName: nome });
+        const nome = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const pass = document.getElementById('reg-password').value;
 
-            await setDoc(doc(db, "users", userCredential.user.uid), {
+        // Verifica se o e-mail digitado está na lista de professores
+        const isProfessor = ADMIN_EMAILS.includes(email);
+
+        try {
+            // Cria o usuário no Firebase Authentication
+            const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+            const user = userCredential.user;
+
+            // Atualiza o nome de exibição no Auth
+            await updateProfile(user, { displayName: nome });
+
+            // Salva os dados no Firestore e define o 'role'
+            await setDoc(doc(db, "users", user.uid), {
                 nome: nome,
                 email: email,
-                role: "aluno", 
+                role: isProfessor ? "professor" : "aluno", // <--- A MÁGICA ACONTECE AQUI
                 dataCadastro: new Date().toISOString(),
                 xpTotal: 0
             });
-            await redirecionar(userCredential.user.uid);
+
+            // Redireciona para o painel correto
+            await redirecionar(user.uid);
+
         } catch (error) {
-            showError(error.code === 'auth/email-already-in-use' ? "E-mail já cadastrado." : "Erro ao criar conta.");
-            btn.innerText = "Criar Conta"; 
-            btn.disabled = false;
+            if (error.code === 'auth/email-already-in-use') {
+                showError("Este e-mail já está cadastrado.");
+            } else if (error.code === 'auth/weak-password') {
+                showError("A senha deve ter pelo menos 6 caracteres.");
+            } else {
+                showError("Erro ao criar conta. Tente novamente.");
+            }
+            btnRegister.innerText = "Criar Conta"; 
+            btnRegister.disabled = false;
         }
     });
 }

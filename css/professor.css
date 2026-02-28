@@ -183,3 +183,78 @@
     color: var(--red);
     background: #fdeceb;
 }
+/* --- NOVA ÁREA DE ALUNOS --- */
+.alunos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.aluno-card {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: 0.2s;
+}
+
+.aluno-card:hover {
+    border-color: var(--yellow);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.aluno-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+}
+
+.aluno-info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.aluno-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.aluno-email {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    margin-bottom: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.aluno-stats-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.aluno-xp-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--bg-hover);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.aluno-xp-fill {
+    height: 100%;
+    background: var(--yellow);
+    border-radius: 2px;
+}

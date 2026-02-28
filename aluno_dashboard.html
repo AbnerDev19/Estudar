@@ -26,18 +26,25 @@
                 <button class="menu-item active"><i class="ri-book-open-line"></i> Trilha do Curso</button>
                 <button class="menu-item" id="btn-logout" style="margin-top: 20px;"><i class="ri-logout-box-line"></i> Sair</button>
             </nav>
+            
+            <div class="sidebar-block" style="margin-top: 24px;">
+                <div class="flex-between text-sm mb-1">
+                    <span class="font-medium">Meta Diária:</span>
+                    <span id="daily-study-goal-display" class="text-sub">0h 0m</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill xp-fill" id="goal-progress-bar" style="width: 0%; background: var(--yellow);"></div>
+                </div>
+            </div>
         </aside>
 
         <main class="split-main-content">
-            
             <div class="column-scroll">
                 <header style="margin-bottom: 24px;">
                     <h1 class="page-title">Módulos e Aulas</h1>
                     <p class="text-sub">Acompanhe seu progresso semanal.</p>
                 </header>
-
-                <div id="semanas-container">
-                    </div>
+                <div id="semanas-container"></div>
             </div>
 
             <div class="column-scroll">
@@ -47,12 +54,16 @@
 
                 <div class="study-stats-grid">
                     <div class="study-card">
-                        <h4>Tempo Total Estudado</h4>
-                        <div class="big-number" id="total-study-time">0h 0m</div>
+                        <h4>Sequência de Estudos</h4>
+                        <div class="big-number"><span id="streak-count" class="text-orange">0</span> Dias</div>
+                        <div class="streak-days" id="streak-days-container"></div>
                     </div>
                     <div class="study-card">
-                        <h4>Dias Seguidos</h4>
-                        <div class="big-number"><span id="streak-count" class="text-orange">0</span> Dias</div>
+                        <h4>Tempo Total Estudado</h4>
+                        <div class="big-number" id="total-study-time">0h 0m</div>
+                        <div class="streak-multiplier mt-1" style="display: inline-block; padding: 2px 6px; font-size: 0.8rem;">
+                            <i class="ri-fire-fill text-yellow"></i> <span id="streak-multiplier-text">1.0x XP</span>
+                        </div>
                     </div>
                 </div>
 
@@ -62,10 +73,12 @@
                         <button class="timer-tab" id="tab-countdown">Temporizador</button>
                     </div>
 
-                    <div style="margin-bottom: 16px;">
-                        <select id="timer-subject-select" class="notion-input" style="max-width: 250px; text-align: center; cursor: pointer;">
-                            <option value="Geral">Estudo Geral</option>
+                    <div style="margin-bottom: 16px; display: flex; justify-content: center; gap: 8px;">
+                        <select id="timer-subject-select" class="notion-input" style="max-width: 200px; text-align: center; cursor: pointer;">
+                            <option value="" disabled selected>Selecione a matéria...</option>
                         </select>
+                        <button class="action-btn" id="btn-new-subject" title="Nova Matéria"><i class="ri-add-line"></i></button>
+                        <button class="action-btn" id="btn-edit-study-goal" title="Editar Meta"><i class="ri-target-line"></i></button>
                     </div>
 
                     <div id="countdown-setup" style="display: none; margin-bottom: 16px;">
@@ -73,7 +86,7 @@
                     </div>
 
                     <div class="timer-display" id="timer-display">00:00:00</div>
-                    <p class="text-sub text-sm">Ganha 1 XP por minuto estudado.</p>
+                    <p class="text-sub text-sm">Ganha 1 XP (+ bônus de ofensiva) por minuto.</p>
                     
                     <div class="timer-controls">
                         <button class="timer-btn btn-play" id="btn-timer-play"><i class="ri-play-fill"></i></button>
@@ -89,8 +102,37 @@
                     </div>
                 </div>
             </div>
-
         </main>
+    </div>
+
+    <div id="modal-subject" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Nova Matéria</h3>
+            <div class="input-group">
+                <input type="text" id="input-subject-name" class="notion-input" placeholder="Nome da matéria..." autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label class="text-sub text-sm mb-1" style="display:block;">Cor da Tag:</label>
+                <input type="color" id="input-subject-color" value="#8B6508" style="width: 100%; height: 40px; border: none; cursor: pointer;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel close-modal">Cancelar</button>
+                <button class="btn-primary" id="save-subject">Criar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-study-goal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Meta Diária de Estudo</h3>
+            <div class="input-group">
+                <input type="number" id="input-study-goal" class="notion-input" placeholder="Minutos por dia (ex: 120)" min="1">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel close-modal">Cancelar</button>
+                <button class="btn-primary" id="save-study-goal">Salvar Meta</button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="js/firebase-config.js"></script>

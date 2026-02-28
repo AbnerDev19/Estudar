@@ -10,10 +10,26 @@ const syncStatus = document.getElementById('sync-status');
 document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            document.getElementById('prof-nome').innerText = user.displayName || "Professor";
-            await carregarSemanas();
-            await carregarAlunos();
+            try {
+                // VERIFICAÇÃO DE SEGURANÇA: Vai buscar os dados do utilizador ao Firestore
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                
+                if (userDoc.exists() && userDoc.data().role === 'professor') {
+                    // Se for realmente professor, carrega a página normalmente
+                    document.getElementById('prof-nome').innerText = user.displayName || "Professor";
+                    await carregarSemanas();
+                    await carregarAlunos();
+                } else {
+                    // Se for aluno ou não tiver permissão, bloqueia o acesso e redireciona
+                    alert("Acesso negado: Esta área é exclusiva para professores.");
+                    window.location.href = "aluno_dashboard.html";
+                }
+            } catch (error) {
+                console.error("Erro ao verificar o perfil do utilizador:", error);
+                window.location.href = "index.html";
+            }
         } else {
+            // Se não estiver logado, manda para o ecrã de login
             window.location.href = "index.html";
         }
     });
@@ -93,7 +109,7 @@ function renderizarEditorSemanas() {
                     </button>
                 </div>
                 <div class="input-group">
-                    <label class="text-sm text-sub font-medium mb-1">Título da Módulo</label>
+                    <label class="text-sm text-sub font-medium mb-1">Título do Módulo</label>
                     <input type="text" class="notion-input" value="${sem.titulo}" onchange="atualizarTexto(${idx}, 'titulo', this.value)">
                 </div>
                 <div class="input-group">
@@ -158,30 +174,62 @@ async function salvarSemanas() {
 
 async function carregarAlunos() {
     const container = document.getElementById('lista-alunos-container');
+    const statTotal = document.getElementById('stat-total-alunos');
+    const statMedia = document.getElementById('stat-media-nivel');
+    
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
         container.innerHTML = '';
-        let temAluno = false;
+        
+        let totalAlunos = 0;
+        let somaNiveis = 0;
 
         querySnapshot.forEach(doc => {
             const data = doc.data();
             if (data.role === 'aluno') {
-                temAluno = true;
+                totalAlunos++;
                 const xp = data.xpTotal || 0;
                 const level = Math.floor(xp / 1000) + 1;
+                somaNiveis += level;
+                
+                // Cálculo para a barra de progresso do aluno
+                const currentLevelXp = xp % 1000;
+                const progress = (currentLevelXp / 1000) * 100;
+                
+                // Gera um avatar com a inicial do aluno usando aquele amarelo escuro nas cores
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nome || 'Aluno')}&background=f7f7f5&color=6B4D06`;
+
                 container.innerHTML += `
-                    <div class="notion-item" style="border: 1px solid var(--border-color); padding: 12px; margin-bottom: 8px;">
-                        <div class="item-info">
-                            <span class="item-name font-medium">${data.nome || 'Sem Nome'}</span>
-                            <span class="item-meta">${data.email}</span>
-                            <span class="item-attr-badge">Lvl ${level}</span>
-                            <span class="item-attr-badge text-yellow"><i class="ri-fire-fill"></i> ${xp} XP</span>
+                    <div class="aluno-card">
+                        <img src="${avatarUrl}" class="aluno-avatar" alt="Avatar">
+                        <div class="aluno-info">
+                            <div class="aluno-name">${data.nome || 'Aluno Sem Nome'}</div>
+                            <div class="aluno-email">${data.email}</div>
+                            <div class="aluno-stats-badges">
+                                <span class="badge" style="background: var(--bg-select); color: var(--blue);">Lvl ${level}</span>
+                                <span class="badge" style="background: #fdfaf3; color: var(--yellow); border: 1px solid var(--yellow);"><i class="ri-fire-fill"></i> ${xp} XP</span>
+                            </div>
+                            <div class="aluno-xp-bar" title="${currentLevelXp}/1000 XP para o próximo nível">
+                                <div class="aluno-xp-fill" style="width: ${progress}%; background: #6B4D06;"></div>
+                            </div>
                         </div>
-                    </div>`;
+                    </div>
+                `;
             }
         });
-        if (!temAluno) container.innerHTML = '<p class="text-sub text-sm">Nenhum aluno matriculado.</p>';
+        
+        if (totalAlunos === 0) {
+            container.innerHTML = '<p class="text-sub text-sm">Nenhum aluno matriculado no momento.</p>';
+            if(statTotal) statTotal.innerText = "0";
+            if(statMedia) statMedia.innerText = "Lvl 0";
+        } else {
+            // Atualiza os painéis lá de cima
+            if(statTotal) statTotal.innerText = totalAlunos;
+            if(statMedia) statMedia.innerText = `Lvl ${Math.round(somaNiveis / totalAlunos)}`;
+        }
+
     } catch (e) {
-        container.innerHTML = `<p class="text-red">Erro ao carregar alunos.</p>`;
+        console.error("Erro ao carregar lista de alunos:", e);
+        container.innerHTML = `<p class="text-red">Erro de permissão ao carregar alunos. Verifique o Firestore.</p>`;
     }
 }
