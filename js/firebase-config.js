@@ -4,18 +4,21 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
+// Sua configuração real do Firebase
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_AUTH_DOMAIN",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_STORAGE_BUCKET",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyCkre9xj-mXDW4oeTymA0RyHPjl9beuwdc",
+  authDomain: "estudar-7183e.firebaseapp.com",
+  projectId: "estudar-7183e",
+  storageBucket: "estudar-7183e.firebasestorage.app",
+  messagingSenderId: "435245497128",
+  appId: "1:435245497128:web:1268542139917529bdae1d"
 };
 
+// Inicializa o Firebase e os serviços
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app); // Preparamos o Storage para os PDFs do professor
+const storage = getStorage(app);
 
+// Exporta as instâncias para uso no resto do projeto
 export { auth, db, storage };

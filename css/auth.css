@@ -1,11 +1,10 @@
-
 /* ARQUIVO: css/auth.css */
 .auth-layout {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: var(--bg-sidebar); /* Fundo cinza bem claro */
+    background-color: var(--bg-sidebar);
     padding: 20px;
 }
 
@@ -16,7 +15,7 @@
     padding: 32px;
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -5px rgba(0, 0, 0, 0.02);
 }
 
 .auth-header {
@@ -29,16 +28,18 @@
     font-weight: 700;
     margin-bottom: 16px;
     letter-spacing: -0.5px;
+    color: var(--text-main);
 }
 
 .logo span {
-    color: var(--yellow-dark);
+    color: var(--yellow);
 }
 
 .auth-header h1 {
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 4px;
+    letter-spacing: -0.02em;
 }
 
 .auth-footer {

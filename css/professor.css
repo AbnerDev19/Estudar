@@ -1,12 +1,58 @@
 /* ARQUIVO: css/professor.css */
+.main-content {
+    flex: 1;
+    padding: 60px 80px;
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    width: 100%;
+}
 
-/* Bloco da Semana (Notion Toggle Block) */
+.view-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.view-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-header {
+    margin-bottom: 32px;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+}
+
+.page-description {
+    color: var(--text-sub);
+    font-size: 1rem;
+}
+
+/* Blocos de Edição (Notion Toggle) */
 .semana-block {
     background: var(--bg-main);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     transition: 0.2s;
     overflow: hidden;
+    margin-bottom: 12px;
 }
 
 .semana-block:hover {
@@ -55,7 +101,7 @@
     display: block;
 }
 
-/* Área de Upload Elegante */
+/* Zona de Upload Elegante */
 .upload-zone {
     border: 1.5px dashed var(--border-color);
     border-radius: var(--radius-sm);
@@ -93,4 +139,47 @@
 
 .upload-zone:hover .upload-label i {
     color: var(--blue);
+}
+
+/* Item de Lista com Ações (Prof e Alunos) */
+.item-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.item-name {
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.item-meta {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+}
+
+.item-attr-badge {
+    font-size: 0.7rem;
+    color: var(--text-sub);
+    border: 1px solid var(--border-color);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.item-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    gap: 8px;
+}
+
+.notion-item:hover .item-actions {
+    opacity: 1;
+}
+
+.icon-btn.delete:hover {
+    color: var(--red);
+    background: #fdeceb;
 }

@@ -1,12 +1,11 @@
 /* ARQUIVO: css/aluno.css */
-
 .split-main-content {
     flex: 1;
     display: grid;
     grid-template-columns: 1.2fr 1fr;
-    /* Coluna das aulas um pouco maior */
     gap: 40px;
-    padding: 40px 60px;
+    padding: 60px 80px;
+    /* Alinhado ao MyLife */
     max-width: 1400px;
     margin: 0 auto;
     height: 100vh;
@@ -15,30 +14,35 @@
 
 .column-scroll {
     overflow-y: auto;
-    padding-right: 10px;
+    padding-right: 16px;
 }
 
-/* Esconde a barra de rolagem para ficar mais clean */
+/* Scrollbar invisível elegante */
 .column-scroll::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 .column-scroll::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
+    background-color: transparent;
     border-radius: 4px;
+    transition: 0.2s;
+}
+
+.column-scroll:hover::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
 }
 
 .page-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 700;
     letter-spacing: -0.02em;
     margin-bottom: 8px;
 }
 
-/* --- TRILHA DE AULAS (ESTILO NOTION TOGGLE) --- */
+/* Trilha de Aulas (Toggle Block Notion) */
 .semana-card {
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .semana-header {
@@ -65,12 +69,13 @@
 }
 
 .semana-card.locked .semana-header {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
+/* Badges */
 .badge {
-    padding: 2px 6px;
+    padding: 2px 8px;
     border-radius: var(--radius-sm);
     font-size: 0.7rem;
     font-weight: 500;
@@ -88,37 +93,15 @@
 
 .semana-body {
     display: none;
-    padding: 12px 12px 24px 32px;
-    /* Recuo estilo Notion */
+    padding: 8px 12px 24px 32px;
+    /* Recuo exato do Notion */
 }
 
 .semana-card.open .semana-body {
     display: block;
 }
 
-.notion-item {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    border-radius: var(--radius-sm);
-    transition: background 0.2s;
-    text-decoration: none;
-    color: var(--text-main);
-    font-size: 0.9rem;
-    margin-bottom: 4px;
-}
-
-.notion-item:hover {
-    background: var(--bg-hover);
-}
-
-.notion-item i {
-    font-size: 1.2rem;
-    color: var(--yellow);
-    margin-right: 12px;
-}
-
-/* --- SALA DE ESTUDOS (Exato do MyLife) --- */
+/* --- SALA DE ESTUDOS --- */
 .study-stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -138,6 +121,7 @@
     color: var(--text-sub);
     margin-bottom: 8px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .study-card .big-number {
@@ -172,6 +156,11 @@
     cursor: pointer;
     font-weight: 500;
     border-bottom: 2px solid transparent;
+    transition: 0.2s;
+}
+
+.timer-tab:hover {
+    color: var(--text-main);
 }
 
 .timer-tab.active {
@@ -206,10 +195,15 @@
     font-size: 1.5rem;
     cursor: pointer;
     color: white;
+    transition: 0.2s;
 }
 
 .btn-play {
     background: var(--blue);
+}
+
+.btn-play:hover {
+    background: #1b6ec2;
 }
 
 .btn-pause {
@@ -217,7 +211,15 @@
     display: none;
 }
 
+.btn-pause:hover {
+    background: #b8620b;
+}
+
 .btn-stop {
     background: var(--red);
     display: none;
+}
+
+.btn-stop:hover {
+    background: #c23333;
 }
