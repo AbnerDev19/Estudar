@@ -11,7 +11,7 @@ import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/f
 // Coloque aqui os e-mails que devem ter acesso ao painel de professor
 const ADMIN_EMAILS = [
     "abneroliveira19072004@gmail.com",
-    "professor@exemplo.com"
+    "gabriel.contarl@gmail.com"
 ];
 
 // Elementos da tela
