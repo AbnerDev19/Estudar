@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Professor - Área de Gestão</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css"> <link rel="stylesheet" href="css/professor.css">
+</head>
+<body>
+    <div id="sync-status" class="sync-status text-sm">
+        <i class="ri-loader-4-line spin"></i> Salvando no banco...
+    </div>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="profile-section">
+                <div class="avatar-container">
+                    <img src="https://ui-avatars.com/api/?name=Professor&background=f1f1ef&color=8B6508&size=128" class="avatar" alt="Avatar">
+                </div>
+                <div class="profile-info">
+                    <h2 id="prof-nome">Mestre</h2>
+                    <p class="text-sub text-sm">Painel Administrativo</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <button class="menu-item active" onclick="switchView('conteudo')" id="nav-conteudo">
+                    <i class="ri-book-3-line"></i> Módulos e Aulas
+                </button>
+                <button class="menu-item" onclick="switchView('alunos')" id="nav-alunos">
+                    <i class="ri-group-line"></i> Meus Alunos
+                </button>
+            </nav>
+
+            <div class="sidebar-block history-block" style="margin-top: auto;">
+                <button class="menu-item text-red" id="btn-logout">
+                    <i class="ri-logout-box-line"></i> Sair do Painel
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <div id="view-conteudo" class="view-section active">
+                <header class="page-header flex-between">
+                    <div>
+                        <h1 class="page-title">Gerenciar Aulas</h1>
+                        <p class="page-description">Crie o conteúdo semanal e anexe os PDFs da turma.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-salvar-tudo" style="display: flex; gap: 8px; align-items: center;">
+                        <i class="ri-save-line"></i> Salvar Alterações
+                    </button>
+                </header>
+
+                <section class="content-section">
+                    <div id="editor-semanas-container" style="display: flex; flex-direction: column; gap: 16px;">
+                        <p class="text-sub text-sm"><i class="ri-loader-4-line spin"></i> Sincronizando com o banco de dados...</p>
+                    </div>
+                </section>
+            </div>
+
+            <div id="view-alunos" class="view-section">
+                <header class="page-header">
+                    <h1 class="page-title">Turma Matriculada</h1>
+                    <p class="page-description">Acompanhe o nível e a evolução dos seus alunos.</p>
+                </header>
+
+                <section class="content-section">
+                    <div class="tasks-list" id="lista-alunos-container">
+                        <p class="text-sub text-sm"><i class="ri-loader-4-line spin"></i> Carregando alunos...</p>
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/professor.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área do Aluno - Plataforma Educacional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/aluno.css">
+</head>
+<body>
+    <div class="app-layout">
+        
+        <aside class="sidebar">
+            <div class="profile-section">
+                <img src="https://ui-avatars.com/api/?name=Aluno&background=f7f7f5&color=8B6508" class="avatar" alt="Avatar">
+                <div class="profile-info">
+                    <h2 id="aluno-nome">Carregando...</h2>
+                    <p class="text-sub" id="aluno-nivel">Lvl 1 • XP: 0</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <button class="menu-item active"><i class="ri-book-open-line"></i> Trilha do Curso</button>
+                <button class="menu-item" id="btn-logout" style="margin-top: 20px;"><i class="ri-logout-box-line"></i> Sair</button>
+            </nav>
+        </aside>
+
+        <main class="split-main-content">
+            
+            <div class="column-scroll">
+                <header style="margin-bottom: 24px;">
+                    <h1 class="page-title">Módulos e Aulas</h1>
+                    <p class="text-sub">Acompanhe seu progresso semanal.</p>
+                </header>
+
+                <div id="semanas-container">
+                    </div>
+            </div>
+
+            <div class="column-scroll">
+                <header style="margin-bottom: 24px;">
+                    <h1 class="page-title">Sala de Estudos</h1>
+                </header>
+
+                <div class="study-stats-grid">
+                    <div class="study-card">
+                        <h4>Tempo Total Estudado</h4>
+                        <div class="big-number" id="total-study-time">0h 0m</div>
+                    </div>
+                    <div class="study-card">
+                        <h4>Dias Seguidos</h4>
+                        <div class="big-number"><span id="streak-count" class="text-orange">0</span> Dias</div>
+                    </div>
+                </div>
+
+                <div class="timer-box">
+                    <div class="timer-tabs">
+                        <button class="timer-tab active" id="tab-stopwatch">Cronômetro</button>
+                        <button class="timer-tab" id="tab-countdown">Temporizador</button>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <select id="timer-subject-select" class="notion-input" style="max-width: 250px; text-align: center; cursor: pointer;">
+                            <option value="Geral">Estudo Geral</option>
+                        </select>
+                    </div>
+
+                    <div id="countdown-setup" style="display: none; margin-bottom: 16px;">
+                        <input type="number" id="countdown-input-minutes" class="notion-input" placeholder="Minutos (ex: 25)" style="max-width: 120px; text-align: center;">
+                    </div>
+
+                    <div class="timer-display" id="timer-display">00:00:00</div>
+                    <p class="text-sub text-sm">Ganha 1 XP por minuto estudado.</p>
+                    
+                    <div class="timer-controls">
+                        <button class="timer-btn btn-play" id="btn-timer-play"><i class="ri-play-fill"></i></button>
+                        <button class="timer-btn btn-pause" id="btn-timer-pause"><i class="ri-pause-fill"></i></button>
+                        <button class="timer-btn btn-stop" id="btn-timer-stop"><i class="ri-stop-fill"></i></button>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px;">
+                    <h4 style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 16px; text-transform: uppercase;">Minutos por Disciplina</h4>
+                    <div style="height: 200px; width: 100%;">
+                        <canvas id="studyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/aluno.js"></script>
+</body>
+</html>

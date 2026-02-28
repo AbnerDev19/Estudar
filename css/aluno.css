@@ -1,0 +1,223 @@
+/* ARQUIVO: css/aluno.css */
+
+.split-main-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    /* Coluna das aulas um pouco maior */
+    gap: 40px;
+    padding: 40px 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.column-scroll {
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Esconde a barra de rolagem para ficar mais clean */
+.column-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.column-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+}
+
+/* --- TRILHA DE AULAS (ESTILO NOTION TOGGLE) --- */
+.semana-card {
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 8px;
+}
+
+.semana-header {
+    padding: 12px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+}
+
+.semana-header:hover {
+    background: var(--bg-hover);
+}
+
+.toggle-icon {
+    transition: transform 0.2s;
+    color: var(--text-placeholder);
+    margin-right: 8px;
+}
+
+.semana-card.open .toggle-icon {
+    transform: rotate(90deg);
+}
+
+.semana-card.locked .semana-header {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.badge {
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.badge-locked {
+    background: #fdeceb;
+    color: var(--red);
+}
+
+.badge-unlocked {
+    background: #e5f5e0;
+    color: var(--green);
+}
+
+.semana-body {
+    display: none;
+    padding: 12px 12px 24px 32px;
+    /* Recuo estilo Notion */
+}
+
+.semana-card.open .semana-body {
+    display: block;
+}
+
+.notion-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+    text-decoration: none;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.notion-item:hover {
+    background: var(--bg-hover);
+}
+
+.notion-item i {
+    font-size: 1.2rem;
+    color: var(--yellow);
+    margin-right: 12px;
+}
+
+/* --- SALA DE ESTUDOS (Exato do MyLife) --- */
+.study-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.study-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+}
+
+.study-card h4 {
+    font-size: 0.85rem;
+    color: var(--text-sub);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.study-card .big-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.timer-box {
+    text-align: center;
+    padding: 32px 16px;
+    background: #fafafa;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    margin-bottom: 32px;
+}
+
+.timer-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.timer-tab {
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    color: var(--text-sub);
+    cursor: pointer;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+}
+
+.timer-tab.active {
+    color: var(--yellow);
+    border-bottom-color: var(--yellow);
+}
+
+.timer-display {
+    font-size: 4.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-main);
+    margin: 16px 0;
+    letter-spacing: -2px;
+}
+
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.timer-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: white;
+}
+
+.btn-play {
+    background: var(--blue);
+}
+
+.btn-pause {
+    background: var(--orange);
+    display: none;
+}
+
+.btn-stop {
+    background: var(--red);
+    display: none;
+}

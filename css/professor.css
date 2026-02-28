@@ -1,0 +1,96 @@
+/* ARQUIVO: css/professor.css */
+
+/* Bloco da Semana (Notion Toggle Block) */
+.semana-block {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: 0.2s;
+    overflow: hidden;
+}
+
+.semana-block:hover {
+    border-color: #d1d1cf;
+}
+
+.semana-header {
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-sidebar);
+    transition: background 0.2s;
+}
+
+.semana-header:hover {
+    background: var(--bg-hover);
+}
+
+.semana-header h3 {
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.toggle-icon {
+    color: var(--text-placeholder);
+    transition: transform 0.2s;
+    font-size: 1.2rem;
+}
+
+.semana-block.open .toggle-icon {
+    transform: rotate(90deg);
+}
+
+.semana-content {
+    display: none;
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.semana-block.open .semana-content {
+    display: block;
+}
+
+/* Área de Upload Elegante */
+.upload-zone {
+    border: 1.5px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 24px 16px;
+    text-align: center;
+    background: var(--bg-main);
+    transition: 0.2s;
+    cursor: pointer;
+    margin-top: 12px;
+    display: block;
+}
+
+.upload-zone:hover {
+    background: var(--bg-select);
+    border-color: var(--blue);
+}
+
+.upload-zone input[type="file"] {
+    display: none;
+}
+
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.upload-label i {
+    font-size: 1.8rem;
+    color: var(--text-sub);
+    transition: 0.2s;
+}
+
+.upload-zone:hover .upload-label i {
+    color: var(--blue);
+}
