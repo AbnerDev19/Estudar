@@ -4,246 +4,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Notion - Gamificado</title>
+    <title>Painel do Professor - Plataforma Educacional</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="fotos/mY.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/professor.css">
     <style>
-        /* Layout Dividido: Dashboard na Esquerda, Sala de Estudos na Direita */
-        .split-main-content {
+        /* Ajuste para o amarelo escuro preferido conforme suas instruções anteriores */
+        :root {
+            --yellow: #8B6508;
+            --yellow-hover: #6b4d06;
+        }
+
+        /* Layout centralizado para o conteúdo do professor */
+        .main-content-wrapper {
             flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
             padding: 40px 60px;
-            max-width: 1600px;
+            max-width: 1200px;
             margin: 0 auto;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .column-scroll {
             overflow-y: auto;
-            padding-right: 16px;
-            height: 100%;
+            height: 100vh;
         }
-        .column-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .column-scroll::-webkit-scrollbar-thumb {
-            background-color: transparent;
-            border-radius: 4px;
-            transition: 0.2s;
-        }
-        .column-scroll:hover::-webkit-scrollbar-thumb {
-            background-color: var(--border-color);
-        }
-        /* Oculta o menu de navegação lateral já que está tudo na mesma tela */
-        .sidebar-menu {
-            display: none !important;
-        }
-        /* Aplicação do Amarelo mais Escuro preferido */
-        .text-yellow, .ri-fire-fill.text-yellow {
-            color: #6B4D06 !important;
-        }
-        .streak-multiplier {
-            border-color: #6B4D06 !important;
+
+        .section-card {
+            background: var(--bg-main);
+            border-radius: var(--radius-lg);
+            margin-bottom: 40px;
         }
     </style>
 </head>
 
 <body>
-    <div id="sync-status" class="sync-status text-sm">
-        <i class="ri-loader-4-line spin"></i> Conectando ao Banco de Dados...
-    </div>
-
     <div class="app-layout">
         <aside class="sidebar">
             <div class="profile-section">
-                <div class="avatar-container">
-                    <img src="https://ui-avatars.com/api/?name=Neo+Player&background=f1f1ef&color=6B4D06&size=128" class="avatar" alt="Avatar">
-                </div>
+                <img src="https://ui-avatars.com/api/?name=Professor&background=f7f7f5&color=8B6508" class="avatar"
+                    alt="Avatar">
                 <div class="profile-info">
-                    <h2 id="global-name">Abner 😊</h2>
-                    <p class="text-sub" id="global-level-text">Lvl 1 • XP: 0</p>
+                    <h2 id="prof-nome">Carregando...</h2>
+                    <p class="text-sub">Painel Administrativo</p>
                 </div>
             </div>
 
-            <nav class="sidebar-menu"></nav>
+            <nav class="sidebar-menu">
+                <button class="menu-item active" id="nav-semanas">
+                    <i class="ri-book-open-line"></i> Conteúdo do Curso
+                </button>
+                <button class="menu-item" id="nav-alunos">
+                    <i class="ri-group-line"></i> Gerir Alunos
+                </button>
+                <button class="menu-item" id="btn-logout" style="margin-top: 20px;">
+                    <i class="ri-logout-box-line"></i> Sair
+                </button>
+            </nav>
 
-            <div class="sidebar-block">
-                <div class="flex-between text-sm mb-1">
-                    <span class="font-medium">Progresso do Nível</span>
-                    <span id="xp-display" class="text-sub">0 / 1000</span>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill xp-fill" id="xp-bar" style="width: 0%; background-color: #6B4D06;"></div>
-                </div>
-            </div>
-
-            <div class="sidebar-block">
-                <h3 class="sidebar-title">Estatísticas de Hoje</h3>
-                <ul class="stats-list">
-                    <li>
-                        <i class="ri-arrow-up-circle-line text-blue"></i>
-                        <span>XP Ganho:</span>
-                        <strong id="today-xp" style="margin-left: auto;">0</strong>
-                    </li>
-                    <li>
-                        <i class="ri-check-line text-green"></i>
-                        <span>Metas Diárias:</span>
-                        <strong id="today-goals" style="margin-left: auto;">0/0</strong>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="sidebar-block">
-                <div class="flex-between mb-1" style="align-items: center;">
-                    <h3 class="sidebar-title" style="margin:0;">Meus Atributos</h3>
-                    <button class="icon-btn" id="btn-open-attr" title="Novo Atributo"><i class="ri-add-line"></i></button>
-                </div>
-                <div id="attributes-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
-                </div>
-            </div>
-
-            <div class="sidebar-block history-block">
-                <div class="flex-between mb-1" style="align-items: center;">
-                    <h3 class="sidebar-title" style="margin:0;">Histórico Recente</h3>
-                    <button class="icon-btn" id="btn-clear-history" title="Limpar Histórico"><i class="ri-delete-bin-line"></i></button>
-                </div>
-                <ul class="history-list" id="history-container">
-                </ul>
+            <div id="sync-status" class="text-sm text-sub" style="margin-top: auto; padding: 10px; text-align: center;">
+                <i class="ri-checkbox-circle-line"></i> Sistema Online
             </div>
         </aside>
 
-        <main class="split-main-content">
-            
-            <div class="column-scroll">
-                <header class="page-header">
-                    <h1 contenteditable="true" class="page-title" spellcheck="false">Meu Dashboard</h1>
-                    <p id="daily-quote" class="page-description">"A evolução acontece todos os dias."</p>
+        <main class="main-content-wrapper">
+
+            <section id="view-semanas" class="view-section active">
+                <header class="page-header flex-between">
+                    <div>
+                        <h1 class="page-title">Módulos do Curso</h1>
+                        <p class="text-sub">Adicione materiais e libere semanas para os alunos.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-salvar-tudo" style="width: auto; padding: 10px 24px;">
+                        <i class="ri-save-line"></i> Salvar Alterações
+                    </button>
                 </header>
 
-                <div class="quick-actions">
-                    <button class="action-btn" id="btn-open-task"><i class="ri-add-line"></i> Nova Missão</button>
-                    <button class="action-btn" id="btn-open-habit"><i class="ri-add-line"></i> Novo Hábito</button>
-                    <button class="action-btn" id="btn-open-activity"><i class="ri-timer-line"></i> Nova Atividade</button>
-                    <button class="action-btn" id="btn-open-study"><i class="ri-add-circle-line"></i> Inserir Tempo</button>
-                    <button class="action-btn" id="btn-open-log"><i class="ri-edit-line"></i> Registrar Ação</button>
+                <div id="editor-semanas-container" class="section-card">
+                    <p class="text-sub">Carregando módulos...</p>
                 </div>
+            </section>
 
-                <section class="content-section">
-                    <div class="section-header">
-                        <h2><i class="ri-timer-flash-line"></i> Atividades (Com Prazo)</h2>
-                    </div>
-                    <div class="tasks-list" id="activities-container"></div>
-                </section>
-
-                <section class="content-section">
-                    <div class="section-header">
-                        <h2><i class="ri-checkbox-multiple-line"></i> Missões do Dia</h2>
-                        <span id="task-progress-text" class="text-sub text-sm">0% Concluído</span>
-                    </div>
-                    <div class="progress-track mb-3">
-                        <div class="progress-fill blue-fill" id="day-progress-bar" style="width: 0%"></div>
-                    </div>
-                    <div class="tasks-list" id="tasks-container"></div>
-                </section>
-
-                <section class="content-section">
-                    <div class="section-header">
-                        <h2><i class="ri-loop-left-line"></i> Hábitos Diários</h2>
-                    </div>
-                    <div class="habits-list" id="habits-container"></div>
-                </section>
-            </div>
-
-            <div class="column-scroll">
+            <section id="view-alunos" class="view-section">
                 <header class="page-header">
-                    <h1 class="page-title">Sala de Estudos</h1>
-                    <p class="page-description">Foque no aprendizado. O tempo estudado gera XP automático!</p>
+                    <h1 class="page-title">Gestão de Alunos</h1>
+                    <p class="text-sub">Acompanhe o progresso e nível de cada estudante.</p>
                 </header>
 
-                <div class="study-stats-grid">
+                <div class="study-stats-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 24px;">
                     <div class="study-card">
-                        <h4>Sequência de Estudos</h4>
-                        <div class="big-number"><span id="streak-count" class="text-orange">0</span> Dias Seguidos</div>
-                        <div class="streak-days" id="streak-days-container"></div>
+                        <h4>Total de Matriculados</h4>
+                        <div class="big-number" id="stat-total-alunos">0</div>
                     </div>
                     <div class="study-card">
-                        <h4>Tempo Total Estudado</h4>
-                        <div class="big-number" id="total-study-time">0h 0m</div>
-                        <p class="text-sub text-sm mt-1">Sua dedicação acumulada.</p>
+                        <h4>Média de Nível</h4>
+                        <div class="big-number" id="stat-media-nivel">Lvl 0</div>
                     </div>
                 </div>
 
-                <div class="study-controls-header flex-between mb-3">
-                    <div class="study-goal-box">
-                        <span class="text-sm text-sub">Meta Diária:</span>
-                        <strong id="daily-study-goal-display">0h 0m</strong>
-                        <button class="icon-btn" id="btn-edit-study-goal" title="Editar Meta"><i class="ri-pencil-line"></i></button>
-                    </div>
-                    <div class="streak-multiplier">
-                        <span class="text-sm font-medium"><i class="ri-fire-fill text-yellow"></i> Ofensiva: <span id="streak-multiplier-text">1.0x XP</span></span>
-                    </div>
+                <div id="lista-alunos-container" class="alunos-grid">
                 </div>
-
-                <div class="timer-box">
-                    <div class="timer-tabs">
-                        <button class="timer-tab active" id="tab-stopwatch">Cronômetro</button>
-                        <button class="timer-tab" id="tab-countdown">Temporizador</button>
-                    </div>
-
-                    <div class="subject-selector-group mb-3">
-                        <select id="timer-subject-select" class="notion-input" style="max-width: 250px; display: inline-block;">
-                            <option value="" disabled selected>Selecione a matéria...</option>
-                        </select>
-                        <button class="action-btn" id="btn-new-subject" style="display: inline-flex; padding: 4px 8px; margin-left: 8px;"><i class="ri-add-line"></i> Nova Matéria</button>
-                    </div>
-
-                    <div id="countdown-setup" style="display: none; margin-bottom: 16px;">
-                        <input type="number" id="countdown-input-minutes" class="notion-input" placeholder="Minutos (ex: 25)" style="max-width: 120px; text-align: center;">
-                    </div>
-
-                    <div class="timer-display" id="timer-display">00:00:00</div>
-                    <p class="text-sub text-sm" id="timer-xp-hint">Ganha 1 XP (+ bônus de ofensiva) por minuto.</p>
-                    
-                    <div class="timer-controls">
-                        <button class="timer-btn btn-play" id="btn-timer-play" title="Iniciar"><i class="ri-play-fill"></i></button>
-                        <button class="timer-btn btn-pause" id="btn-timer-pause" title="Pausar"><i class="ri-pause-fill"></i></button>
-                        <button class="timer-btn btn-stop" id="btn-timer-stop" title="Finalizar e Salvar"><i class="ri-stop-fill"></i></button>
-                    </div>
-                </div>
-
-                <section class="content-section">
-                    <div class="section-header">
-                        <h2><i class="ri-bar-chart-box-line"></i> Desempenho por Disciplina (Minutos)</h2>
-                    </div>
-                    <div style="position: relative; height: 300px; width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px;">
-                        <canvas id="studyChart"></canvas>
-                    </div>
-                </section>
-            </div>
+            </section>
 
         </main>
     </div>
 
-    <div id="modal-attr" class="modal-overlay">
-        <div class="modal-content">
-            <h3 class="modal-title">Novo Atributo (Skill)</h3>
-            <p class="text-sub text-sm mb-3">Crie um atributo para evoluir (ex: Programação, Saúde, Leitura).</p>
-            <div class="input-group">
-                <input type="text" id="input-attr-name" class="notion-input" placeholder="Nome do atributo..." autocomplete="off">
-                <span class="error-msg" id="error-attr-name"></span>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel close-attr">Cancelar</button>
-                <button class="btn-primary" id="save-attr">Criar Atributo</button>
-            </div>
-        </div>
-    </div>
-    
-    <script type="module" src="script.js"></script>
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/professor.js"></script>
 </body>
+
 </html>
