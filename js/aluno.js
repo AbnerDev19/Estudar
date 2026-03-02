@@ -76,29 +76,47 @@ async function carregarTrilhaDoFirestore() {
 function renderizarSemanas(bancoSemanas) {
     const container = document.getElementById('semanas-container');
     container.innerHTML = '';
+    
     bancoSemanas.forEach(sem => {
         const card = document.createElement('div');
         card.className = `semana-card ${sem.liberada ? 'unlocked' : 'locked'}`;
         const statusBadge = sem.liberada ? '<span class="badge badge-unlocked">Liberado</span>' : '<span class="badge badge-locked"><i class="ri-lock-line"></i> Bloqueado</span>';
         
-        let materiaisHTML = '';
-        if (sem.liberada && sem.materiais) {
-            sem.materiais.forEach(mat => {
-                const icon = mat.tipo === 'pdf' ? 'ri-file-pdf-line' : 'ri-play-circle-line';
-                materiaisHTML += `<a href="${mat.link}" target="_blank" class="notion-item"><i class="${icon}"></i> ${mat.nome}</a>`;
+        let diasHTML = '';
+        if (sem.liberada && sem.dias) {
+            sem.dias.forEach(dia => {
+                // Renderiza o dia APENAS se tiver algum texto escrito ou algum material anexado
+                if((dia.texto && dia.texto.trim() !== "") || (dia.materiais && dia.materiais.length > 0)) {
+                    let materiaisHTML = '';
+                    if (dia.materiais) {
+                        dia.materiais.forEach(mat => {
+                            const icon = mat.tipo === 'pdf' ? 'ri-file-pdf-line' : 'ri-play-circle-line';
+                            materiaisHTML += `<a href="${mat.link}" target="_blank" class="notion-item" style="border: 1px solid var(--border-color); margin-top: 8px;"><i class="${icon}"></i> ${mat.nome}</a>`;
+                        });
+                    }
+                    
+                    diasHTML += `
+                        <div class="dia-aluno-block" style="margin-top: 16px; padding: 16px; background: var(--bg-main); border-radius: var(--radius-sm); border-left: 3px solid var(--yellow); box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                            <h5 style="margin-bottom: 8px; color: var(--text-main); font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="ri-calendar-check-line text-yellow"></i> ${dia.nome}
+                            </h5>
+                            ${dia.texto ? `<p class="text-sub text-sm" style="margin-bottom: 12px; white-space: pre-wrap;">${dia.texto}</p>` : ''}
+                            ${materiaisHTML}
+                        </div>
+                    `;
+                }
             });
         }
+
         card.innerHTML = `
             <div class="semana-header" onclick="if(${sem.liberada}) this.parentElement.classList.toggle('open')">
                 <div class="flex-between" style="width: 100%;">
-                    <span class="font-medium"><i class="ri-arrow-right-s-line toggle-icon"></i> Semana ${sem.numero.toString().padStart(2, '0')}</span>
+                    <span class="font-medium"><i class="ri-arrow-right-s-line toggle-icon"></i> ${sem.titulo || `Semana ${sem.numero.toString().padStart(2, '0')}`}</span>
                     ${statusBadge}
                 </div>
             </div>
-            <div class="semana-body">
-                <h4 style="margin-bottom:4px;">${sem.titulo || 'Sem Título'}</h4>
-                <p class="text-sub text-sm">${sem.texto || ''}</p>
-                ${materiaisHTML}
+            <div class="semana-body" style="background: var(--bg-sidebar);">
+                ${diasHTML === '' && sem.liberada ? '<p class="text-sub text-sm" style="padding-top: 12px;">Nenhum conteúdo adicionado nesta semana ainda.</p>' : diasHTML}
             </div>`;
         container.appendChild(card);
     });

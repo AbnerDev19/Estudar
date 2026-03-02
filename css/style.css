@@ -330,3 +330,89 @@ h4 {
         transform: rotate(360deg);
     }
 }
+/* =========================================
+   RESPONSIVIDADE PARA CELULARES
+   (Adaptação automática para telas menores que 768px)
+========================================= */
+@media (max-width: 768px) {
+    /* Layout Principal em Coluna */
+    .app-layout {
+        flex-direction: column;
+    }
+
+    /* O Menu Lateral (Sidebar) transforma-se num Menu Superior */
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .profile-section {
+        border-bottom: none;
+        padding-bottom: 0;
+        width: auto;
+    }
+
+    /* Menu horizontal com scroll se necessário */
+    .sidebar-menu {
+        flex-direction: row;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        gap: 8px;
+    }
+
+    .menu-item {
+        white-space: nowrap;
+        width: auto;
+        justify-content: center;
+    }
+
+    .sidebar-block {
+        width: 100%;
+        margin-top: 12px !important;
+    }
+
+    /* --- PAINEL DO ALUNO --- */
+    /* Empilha a Trilha e a Sala de Estudos uma em cima da outra */
+    .split-main-content {
+        grid-template-columns: 1fr; 
+        padding: 20px;
+        gap: 32px;
+        height: auto; 
+        overflow: visible; 
+    }
+
+    .column-scroll {
+        overflow-y: visible;
+        padding-right: 0;
+    }
+
+    /* --- PAINEL DO PROFESSOR --- */
+    .main-content-wrapper,
+    .main-content {
+        padding: 20px;
+        height: auto;
+    }
+
+    /* Grids empilhados (Estatísticas e Alunos) */
+    .study-stats-grid,
+    .alunos-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Ajustes menores de Texto e Elementos */
+    .page-title {
+        font-size: 1.8rem;
+    }
+
+    .timer-display {
+        font-size: 3.5rem; /* Reduz o tamanho do cronómetro para caber no telemóvel */
+    }
+}
