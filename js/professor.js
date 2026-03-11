@@ -5,7 +5,7 @@ import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.co
 
 // === CONFIGURAÇÃO DO CLOUDINARY ===
 const CLOUD_NAME = "dq4jnvqcq";
-const UPLOAD_PRESET = "ml_default";
+const UPLOAD_PRESET = "materiais_estudo";
 
 let semanasGerais = [];
 
