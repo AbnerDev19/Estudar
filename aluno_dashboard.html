@@ -1,18 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Área do Aluno - Plataforma Educacional</title>
+    <title>Área do Aluno - Gamificada</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/aluno.css">
+    <style>
+        /* Ajustes rápidos para fundir os layouts */
+        
+        .main-content-wrapper {
+            flex: 1;
+            padding: 40px 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .view-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
+
 <body>
     <div class="app-layout">
-        
         <aside class="sidebar">
             <div class="profile-section">
                 <img src="https://ui-avatars.com/api/?name=Aluno&background=f7f7f5&color=8B6508" class="avatar" alt="Avatar">
@@ -21,35 +54,84 @@
                     <p class="text-sub" id="aluno-nivel">Lvl 1 • XP: 0</p>
                 </div>
             </div>
-            
+
             <nav class="sidebar-menu">
-                <button class="menu-item active"><i class="ri-book-open-line"></i> Trilha do Curso</button>
+                <button class="menu-item active" id="nav-dashboard" onclick="switchView('dashboard')"><i class="ri-dashboard-line"></i> Meu Dashboard</button>
+                <button class="menu-item" id="nav-trilha" onclick="switchView('trilha')"><i class="ri-book-open-line"></i> Trilha do Curso</button>
+                <button class="menu-item" id="nav-study" onclick="switchView('study')"><i class="ri-book-read-line"></i> Sala de Estudos</button>
                 <button class="menu-item" id="btn-logout" style="margin-top: 20px;"><i class="ri-logout-box-line"></i> Sair</button>
             </nav>
-            
-            <div class="sidebar-block" style="margin-top: 24px;">
+
+            <div class="sidebar-block">
                 <div class="flex-between text-sm mb-1">
-                    <span class="font-medium">Meta Diária:</span>
-                    <span id="daily-study-goal-display" class="text-sub">0h 0m</span>
+                    <span class="font-medium">Progresso Diário</span>
+                    <span id="today-xp" class="text-sub">+0 XP Hoje</span>
                 </div>
                 <div class="progress-track">
                     <div class="progress-fill xp-fill" id="goal-progress-bar" style="width: 0%; background: var(--yellow);"></div>
                 </div>
             </div>
-        </aside>
 
-        <main class="split-main-content">
-            <div class="column-scroll">
-                <header style="margin-bottom: 24px;">
-                    <h1 class="page-title">Módulos e Aulas</h1>
-                    <p class="text-sub">Acompanhe seu progresso semanal.</p>
-                </header>
-                <div id="semanas-container"></div>
+            <div class="sidebar-block">
+                <div class="flex-between mb-1" style="align-items: center;">
+                    <h3 class="sidebar-title" style="margin:0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-sub);">Meus Atributos</h3>
+                    <button class="icon-btn" id="btn-open-attr" title="Novo Atributo"><i class="ri-add-line"></i></button>
+                </div>
+                <div id="attributes-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;"></div>
             </div>
 
-            <div class="column-scroll">
-                <header style="margin-bottom: 24px;">
-                    <h1 class="page-title">Sala de Estudos</h1>
+            <div class="sidebar-block history-block" style="margin-top: 16px;">
+                <div class="flex-between mb-1" style="align-items: center;">
+                    <h3 class="sidebar-title" style="margin:0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-sub);">Histórico</h3>
+                    <button class="icon-btn" id="btn-clear-history" title="Limpar"><i class="ri-delete-bin-line"></i></button>
+                </div>
+                <ul class="history-list" id="history-container" style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem;"></ul>
+            </div>
+        </aside>
+
+        <main class="main-content-wrapper">
+
+            <section id="view-dashboard" class="view-section active">
+                <header class="page-header" style="margin-bottom: 32px;">
+                    <h1 class="page-title" style="font-size: 2.2rem;">Meu Dashboard</h1>
+                    <p class="text-sub">Transforme sua rotina num jogo de evolução.</p>
+                </header>
+
+                <div class="quick-actions" style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
+                    <button class="action-btn" id="btn-open-task"><i class="ri-add-line"></i> Nova Missão</button>
+                    <button class="action-btn" id="btn-open-habit"><i class="ri-add-line"></i> Novo Hábito</button>
+                    <button class="action-btn" id="btn-open-activity"><i class="ri-timer-line"></i> Atividade c/ Prazo</button>
+                    <button class="action-btn" id="btn-open-log"><i class="ri-edit-line"></i> Registrar Ação</button>
+                </div>
+
+                <div style="margin-bottom: 40px;">
+                    <h2 style="font-size: 1.2rem; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="ri-timer-flash-line"></i> Atividades e Trabalhos</h2>
+                    <div id="activities-container"></div>
+                </div>
+
+                <div style="margin-bottom: 40px;">
+                    <h2 style="font-size: 1.2rem; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="ri-checkbox-multiple-line"></i> Missões do Dia</h2>
+                    <div id="tasks-container"></div>
+                </div>
+
+                <div style="margin-bottom: 40px;">
+                    <h2 style="font-size: 1.2rem; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="ri-loop-left-line"></i> Hábitos Diários</h2>
+                    <div id="habits-container"></div>
+                </div>
+            </section>
+
+            <section id="view-trilha" class="view-section">
+                <header style="margin-bottom: 32px;">
+                    <h1 class="page-title" style="font-size: 2.2rem;">Módulos e Aulas</h1>
+                    <p class="text-sub">Acompanhe seu progresso e acesse os materiais do professor.</p>
+                </header>
+                <div id="semanas-container"></div>
+            </section>
+
+            <section id="view-study" class="view-section">
+                <header style="margin-bottom: 32px;">
+                    <h1 class="page-title" style="font-size: 2.2rem;">Sala de Estudos</h1>
+                    <p class="text-sub">O tempo focado gera XP automático.</p>
                 </header>
 
                 <div class="study-stats-grid">
@@ -61,16 +143,16 @@
                     <div class="study-card">
                         <h4>Tempo Total Estudado</h4>
                         <div class="big-number" id="total-study-time">0h 0m</div>
-                        <div class="streak-multiplier mt-1" style="display: inline-block; padding: 2px 6px; font-size: 0.8rem;">
+                        <div class="streak-multiplier mt-1" style="display: inline-block; background: #fdfaf3; padding: 2px 6px; border: 1px solid var(--yellow); border-radius: 4px; font-size: 0.8rem;">
                             <i class="ri-fire-fill text-yellow"></i> <span id="streak-multiplier-text">1.0x XP</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="timer-box">
-                    <div class="timer-tabs">
-                        <button class="timer-tab active" id="tab-stopwatch">Cronômetro</button>
-                        <button class="timer-tab" id="tab-countdown">Temporizador</button>
+                <div class="timer-box" style="text-align: center; padding: 32px 16px; background: #fafafa; border: 1px solid var(--border-color); border-radius: var(--radius-lg); margin-bottom: 32px;">
+                    <div class="timer-tabs" style="display: flex; justify-content: center; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color);">
+                        <button class="timer-tab active" id="tab-stopwatch" style="background:none; border:none; padding:8px 16px; border-bottom: 2px solid var(--yellow); color: var(--yellow); cursor:pointer;">Cronômetro</button>
+                        <button class="timer-tab" id="tab-countdown" style="background:none; border:none; padding:8px 16px; border-bottom: 2px solid transparent; cursor:pointer;">Temporizador</button>
                     </div>
 
                     <div style="margin-bottom: 16px; display: flex; justify-content: center; gap: 8px;">
@@ -85,57 +167,99 @@
                         <input type="number" id="countdown-input-minutes" class="notion-input" placeholder="Minutos (ex: 25)" style="max-width: 120px; text-align: center;">
                     </div>
 
-                    <div class="timer-display" id="timer-display">00:00:00</div>
+                    <div class="timer-display" id="timer-display" style="font-size: 4.5rem; font-weight: 700; margin: 16px 0;">00:00:00</div>
                     <p class="text-sub text-sm">Ganha 1 XP (+ bônus de ofensiva) por minuto.</p>
-                    
-                    <div class="timer-controls">
-                        <button class="timer-btn btn-play" id="btn-timer-play"><i class="ri-play-fill"></i></button>
-                        <button class="timer-btn btn-pause" id="btn-timer-pause"><i class="ri-pause-fill"></i></button>
-                        <button class="timer-btn btn-stop" id="btn-timer-stop"><i class="ri-stop-fill"></i></button>
+
+                    <div class="timer-controls" style="display: flex; justify-content: center; gap: 16px; margin-top: 16px;">
+                        <button class="timer-btn btn-play" id="btn-timer-play" style="width:50px; height:50px; border-radius:50%; border:none; background:var(--blue); color:white; font-size:1.5rem; cursor:pointer;"><i class="ri-play-fill"></i></button>
+                        <button class="timer-btn btn-pause" id="btn-timer-pause" style="width:50px; height:50px; border-radius:50%; border:none; background:var(--orange); color:white; font-size:1.5rem; cursor:pointer; display:none;"><i class="ri-pause-fill"></i></button>
+                        <button class="timer-btn btn-stop" id="btn-timer-stop" style="width:50px; height:50px; border-radius:50%; border:none; background:var(--red); color:white; font-size:1.5rem; cursor:pointer; display:none;"><i class="ri-stop-fill"></i></button>
                     </div>
                 </div>
 
                 <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px;">
                     <h4 style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 16px; text-transform: uppercase;">Minutos por Disciplina</h4>
-                    <div style="height: 200px; width: 100%;">
-                        <canvas id="studyChart"></canvas>
-                    </div>
+                    <div style="height: 200px; width: 100%;"><canvas id="studyChart"></canvas></div>
                 </div>
-            </div>
+            </section>
+
         </main>
     </div>
 
     <div id="modal-subject" class="modal-overlay">
         <div class="modal-content">
             <h3 class="modal-title">Nova Matéria</h3>
-            <div class="input-group">
-                <input type="text" id="input-subject-name" class="notion-input" placeholder="Nome da matéria..." autocomplete="off">
-            </div>
+            <div class="input-group"><input type="text" id="input-subject-name" class="notion-input" placeholder="Nome da matéria..."></div>
             <div class="input-group">
                 <label class="text-sub text-sm mb-1" style="display:block;">Cor da Tag:</label>
                 <input type="color" id="input-subject-color" value="#8B6508" style="width: 100%; height: 40px; border: none; cursor: pointer;">
             </div>
-            <div class="modal-actions">
-                <button class="btn-cancel close-modal">Cancelar</button>
-                <button class="btn-primary" id="save-subject">Criar</button>
-            </div>
+            <div class="modal-actions"><button class="btn-cancel close-modal">Cancelar</button><button class="btn-primary" id="save-subject">Criar</button></div>
         </div>
     </div>
 
     <div id="modal-study-goal" class="modal-overlay">
         <div class="modal-content">
             <h3 class="modal-title">Meta Diária de Estudo</h3>
+            <div class="input-group"><input type="number" id="input-study-goal" class="notion-input" placeholder="Minutos por dia (ex: 120)"></div>
+            <div class="modal-actions"><button class="btn-cancel close-modal">Cancelar</button><button class="btn-primary" id="save-study-goal">Salvar Meta</button></div>
+        </div>
+    </div>
+
+    <div id="modal-attr" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Novo Atributo (Skill)</h3>
+            <div class="input-group"><input type="text" id="input-attr-name" class="notion-input" placeholder="Ex: Programação, Saúde..."></div>
+            <div class="modal-actions"><button class="btn-cancel close-modal">Cancelar</button><button class="btn-primary" id="save-attr">Criar Atributo</button></div>
+        </div>
+    </div>
+
+    <div id="modal-task" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Criar Missão Diária</h3>
+            <div class="input-group"><input type="text" id="input-task-name" class="notion-input" placeholder="Nome da missão..."></div>
+            <div class="input-group"><input type="number" id="input-task-xp" class="notion-input" placeholder="Recompensa de XP (Ex: 50)"></div>
+            <div class="input-group"><select id="input-task-attr" class="notion-input"></select></div>
+            <div class="modal-actions"><button class="btn-cancel close-modal">Cancelar</button><button class="btn-primary" id="save-task">Adicionar</button></div>
+        </div>
+    </div>
+
+    <div id="modal-habit" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Novo Hábito</h3>
+            <div class="input-group"><input type="text" id="input-habit-name" class="notion-input" placeholder="Nome do hábito..."></div>
+            <div class="input-group"><select id="input-habit-attr" class="notion-input"></select></div>
+            <div class="modal-actions"><button class="btn-cancel close-modal">Cancelar</button><button class="btn-primary" id="save-habit">Adicionar</button></div>
+        </div>
+    </div>
+
+    <div id="modal-activity" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Atividade com Prazo</h3>
+            <div class="input-group"><input type="text" id="input-act-name" class="notion-input" placeholder="Nome da atividade..."></div>
+            <div class="input-group"><input type="datetime-local" id="input-act-date" class="notion-input"></div>
             <div class="input-group">
-                <input type="number" id="input-study-goal" class="notion-input" placeholder="Minutos por dia (ex: 120)" min="1">
+                <select id="input-act-diff" class="notion-input">
+                    <option value="easy">Fácil (30 XP)</option>
+                    <option value="medium">Médio (60 XP)</option>
+                    <option value="hard">Difícil (100 XP)</option>
+                </select>
             </div>
-            <div class="modal-actions">
-                <button class="btn-cancel close-modal">Cancelar</button>
-                <button class="btn-primary" id="save-study-goal">Salvar Meta</button>
-            </div>
+            <div class="input-group"><select id="input-act-attr" class="notion-input"></select></div>
+            <div class="modal-actions"><button class="btn-cancel close-modal">Cancelar</button><button class="btn-primary" id="save-activity">Adicionar</button></div>
+        </div>
+    </div>
+
+    <div id="modal-log" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Registro Manual</h3>
+            <div class="input-group"><input type="text" id="input-log-desc" class="notion-input" placeholder="O que você fez agora?"></div>
+            <div class="modal-actions"><button class="btn-cancel close-modal">Cancelar</button><button class="btn-primary" id="save-log">Registrar</button></div>
         </div>
     </div>
 
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/aluno.js"></script>
 </body>
+
 </html>
