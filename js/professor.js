@@ -6,8 +6,6 @@ import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.co
 let semanasGerais = [];
 
 // === COLE AQUI O LINK DO GOOGLE APPS SCRIPT (APP DA WEB) ===
-// Atenção: É o link que começa com https://script.google.com/macros/s/...
-// === COLE AQUI O LINK DO GOOGLE APPS SCRIPT (APP DA WEB) ===
 const SCRIPT_URL_GOOGLE_DRIVE = "https://script.google.com/macros/s/AKfycbzHC_iJasQDOpYXJmKWvKA4wQ2pLfqsmoVdvHwhCmJz3lh2mhQZYWKjpDXKRf3onAAIXQ/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -140,7 +138,7 @@ function renderizarEditorSemanas() {
                             <i class="${icon} text-yellow" style="font-size:1.2rem; margin-right:12px;"></i>
                             <div class="item-info"><span class="item-name text-sm">${mat.nome}</span></div>
                             <div class="item-actions">
-                                <button class="icon-btn delete" onclick="window.removerMaterial(${idxSemana}, ${idxDia}, ${matIdx})" title="Excluir">
+                                <button class="icon-btn delete" onclick="window.removerMaterial(${idxSemana}, ${idxDia}, ${matIdx}, this)" title="Excluir">
                                     <i class="ri-delete-bin-line"></i>
                                 </button>
                             </div>
@@ -155,7 +153,7 @@ function renderizarEditorSemanas() {
                         <label class="text-sm text-sub font-medium mb-1">Instruções do Dia</label>
                         <textarea class="notion-input" rows="2" onchange="window.atualizarTextoDia(${idxSemana}, ${idxDia}, this.value)">${dia.texto}</textarea>
                     </div>
-                    <div style="margin-top: 12px;">
+                    <div id="container-materiais-${idxSemana}-${idxDia}" style="margin-top: 12px;">
                         ${anexosHTML}
                         <label class="upload-zone" for="upload-${idxSemana}-${idxDia}" style="padding: 12px; margin-top: 8px;">
                             <div class="upload-label">
@@ -176,7 +174,7 @@ function renderizarEditorSemanas() {
             <div class="semana-content">
                 <div class="flex-between mb-3" style="background: var(--bg-hover); padding: 12px; border-radius: var(--radius-sm);">
                     <span class="text-sm font-medium text-sub">Status de visualização para o aluno:</span>
-                    <button class="action-btn" onclick="window.toggleStatus(${idxSemana})" style="background: ${sem.liberada ? 'var(--bg-main)' : 'var(--blue)'}; color: ${sem.liberada ? 'var(--text-main)' : 'white'};">
+                    <button class="action-btn" onclick="window.toggleStatus(${idxSemana}, this)" style="background: ${sem.liberada ? 'var(--bg-main)' : 'var(--blue)'}; color: ${sem.liberada ? 'var(--text-main)' : 'white'};">
                         ${sem.liberada ? 'Bloquear Alunos' : 'Liberar para Alunos'}
                     </button>
                 </div>
@@ -193,11 +191,28 @@ function renderizarEditorSemanas() {
 }
 
 // ==========================================
-// FUNÇÕES GLOBAIS DE EDIÇÃO E UPLOAD (GOOGLE DRIVE)
+// FUNÇÕES GLOBAIS DE EDIÇÃO E UPLOAD
 // ==========================================
-window.toggleStatus = function(idx) {
+window.toggleStatus = function(idx, btnElement) {
     semanasGerais[idx].liberada = !semanasGerais[idx].liberada;
-    renderizarEditorSemanas();
+    const sem = semanasGerais[idx];
+
+    // Atualiza apenas o botão clicado
+    btnElement.style.background = sem.liberada ? 'var(--bg-main)' : 'var(--blue)';
+    btnElement.style.color = sem.liberada ? 'var(--text-main)' : 'white';
+    btnElement.innerText = sem.liberada ? 'Bloquear Alunos' : 'Liberar para Alunos';
+
+    // Atualiza apenas a badge daquela semana
+    const semanaBlock = btnElement.closest('.semana-block');
+    const badge = semanaBlock.querySelector('.badge');
+
+    if (sem.liberada) {
+        badge.className = 'badge badge-unlocked';
+        badge.innerHTML = '<i class="ri-unlock-line text-green" style="margin-right:4px;"></i> Conteúdo Liberado';
+    } else {
+        badge.className = 'badge badge-locked';
+        badge.innerHTML = '<i class="ri-lock-line text-red" style="margin-right:4px;"></i> Acesso Bloqueado';
+    }
 };
 
 window.atualizarTituloSemana = function(idx, valor) {
@@ -208,14 +223,19 @@ window.atualizarTextoDia = function(idxSemana, idxDia, valor) {
     semanasGerais[idxSemana].dias[idxDia].texto = valor;
 };
 
-window.removerMaterial = function(idxSemana, idxDia, idxMaterial) {
+window.removerMaterial = function(idxSemana, idxDia, idxMaterial, btnElement) {
     if (confirm("Tem certeza que deseja remover este arquivo?")) {
         semanasGerais[idxSemana].dias[idxDia].materiais.splice(idxMaterial, 1);
-        renderizarEditorSemanas();
+
+        // Remove do HTML sem recarregar tudo
+        const notionItem = btnElement.closest('.notion-item');
+        if (notionItem) {
+            notionItem.remove();
+        }
     }
 };
 
-// NOVA FUNÇÃO DE UPLOAD USANDO O GOOGLE APPS SCRIPT
+// FUNÇÃO DE UPLOAD USANDO O GOOGLE APPS SCRIPT (COM INSERÇÃO DIRETA NA TELA)
 window.fazerUpload = function(idxSemana, idxDia, inputElement) {
     const file = inputElement.files[0];
     if (!file) return;
@@ -265,7 +285,29 @@ window.fazerUpload = function(idxSemana, idxDia, inputElement) {
                 link: data.url
             });
 
-            renderizarEditorSemanas();
+            // Cria o elemento do novo ficheiro e insere-o na ecrã diretamente
+            const containerMateriais = document.getElementById(`container-materiais-${idxSemana}-${idxDia}`);
+            const matIdx = semanasGerais[idxSemana].dias[idxDia].materiais.length - 1;
+            const iconMat = file.type.includes('pdf') ? 'ri-file-pdf-line' : 'ri-attachment-line';
+
+            const div = document.createElement('div');
+            div.className = 'notion-item';
+            div.style = 'border: 1px solid var(--border-color); margin-bottom: 8px; background: var(--bg-hover);';
+            div.innerHTML = `
+                <i class="${iconMat} text-yellow" style="font-size:1.2rem; margin-right:12px;"></i>
+                <div class="item-info"><span class="item-name text-sm">${file.name}</span></div>
+                <div class="item-actions">
+                    <button class="icon-btn delete" onclick="window.removerMaterial(${idxSemana}, ${idxDia}, ${matIdx}, this)" title="Excluir">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>
+            `;
+
+            containerMateriais.insertBefore(div, containerMateriais.querySelector('.upload-zone'));
+
+            // Restaura o ícone de upload ao estado original
+            statusText.innerText = `Anexar material para ${semanasGerais[idxSemana].dias[idxDia].nome}`;
+            icon.className = "ri-upload-cloud-2-line";
 
         } catch (e) {
             statusText.innerText = "Erro ao enviar arquivo.";
