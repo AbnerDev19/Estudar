@@ -1,13 +1,14 @@
 // ARQUIVO: js/professor.js
-import { auth, db } from './firebase-config.js'; // Note que tiramos o 'storage' daqui
+import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// === CONFIGURAÇÃO DO CLOUDINARY ===
-const CLOUD_NAME = "dq4jnvqcq";
-const UPLOAD_PRESET = "materiais_estudo";
-
 let semanasGerais = [];
+
+// === COLE AQUI O LINK DO GOOGLE APPS SCRIPT (APP DA WEB) ===
+// Atenção: É o link que começa com https://script.google.com/macros/s/...
+// === COLE AQUI O LINK DO GOOGLE APPS SCRIPT (APP DA WEB) ===
+const SCRIPT_URL_GOOGLE_DRIVE = "https://script.google.com/macros/s/AKfycbzHC_iJasQDOpYXJmKWvKA4wQ2pLfqsmoVdvHwhCmJz3lh2mhQZYWKjpDXKRf3onAAIXQ/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -86,7 +87,6 @@ async function carregarSemanas() {
         if (docSnap.exists() && docSnap.data().semanas) {
             let semanasBanco = docSnap.data().semanas;
 
-            // Migração automática para o novo formato de "Dias"
             semanasGerais = semanasBanco.map(sem => {
                 if (!sem.dias) {
                     sem.dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map((nomeDia, j) => ({
@@ -98,7 +98,6 @@ async function carregarSemanas() {
                 return sem;
             });
         } else {
-            // Estrutura Base Nova (Semana contendo Dias)
             semanasGerais = Array.from({ length: 13 }, (_, i) => ({
                 numero: i + 1,
                 titulo: `Semana ${(i + 1).toString().padStart(2, '0')}: Título da Aula`,
@@ -130,7 +129,6 @@ function renderizarEditorSemanas() {
         const badgeText = sem.liberada ? 'Conteúdo Liberado' : 'Acesso Bloqueado';
         const lockIcon = sem.liberada ? 'ri-unlock-line text-green' : 'ri-lock-line text-red';
 
-        // Renderiza cada dia da semana (Segunda a Domingo)
         let diasHTML = '';
         sem.dias.forEach((dia, idxDia) => {
             let anexosHTML = '';
@@ -195,7 +193,7 @@ function renderizarEditorSemanas() {
 }
 
 // ==========================================
-// FUNÇÕES GLOBAIS DE EDIÇÃO E UPLOAD (CLOUDINARY)
+// FUNÇÕES GLOBAIS DE EDIÇÃO E UPLOAD (GOOGLE DRIVE)
 // ==========================================
 window.toggleStatus = function(idx) {
     semanasGerais[idx].liberada = !semanasGerais[idx].liberada;
@@ -217,54 +215,65 @@ window.removerMaterial = function(idxSemana, idxDia, idxMaterial) {
     }
 };
 
-window.fazerUpload = async function(idxSemana, idxDia, inputElement) {
+// NOVA FUNÇÃO DE UPLOAD USANDO O GOOGLE APPS SCRIPT
+window.fazerUpload = function(idxSemana, idxDia, inputElement) {
     const file = inputElement.files[0];
     if (!file) return;
+
+    if (!SCRIPT_URL_GOOGLE_DRIVE || SCRIPT_URL_GOOGLE_DRIVE === "COLE_O_SEU_LINK_DO_APP_DA_WEB_AQUI") {
+        alert("Atenção: Você esqueceu de colocar o link do Google Apps Script no início do arquivo professor.js!");
+        return;
+    }
 
     const statusText = document.getElementById(`upload-status-${idxSemana}-${idxDia}`);
     const icon = document.getElementById(`upload-icon-${idxSemana}-${idxDia}`);
 
-    statusText.innerText = `Enviando ${file.name}...`;
+    statusText.innerText = `A preparar ${file.name}...`;
     icon.className = "ri-loader-4-line spin text-blue";
 
-    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET);
+    reader.onload = async function() {
+        const base64Data = reader.result.split(',')[1];
 
-    try {
-        const response = await fetch(cloudinaryUrl, {
-            method: 'POST',
-            body: formData
-        });
+        const payload = {
+            fileName: file.name,
+            mimeType: file.type,
+            base64: base64Data
+        };
 
-        const data = await response.json();
+        try {
+            statusText.innerText = `A guardar no servidor... (aguarde)`;
 
-        if (!response.ok) {
-            throw new Error(data.error.message || "Erro desconhecido no Cloudinary");
+            const response = await fetch(SCRIPT_URL_GOOGLE_DRIVE, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.status === "error") throw new Error(data.message);
+
+            if (!semanasGerais[idxSemana].dias[idxDia].materiais) {
+                semanasGerais[idxSemana].dias[idxDia].materiais = [];
+            }
+
+            semanasGerais[idxSemana].dias[idxDia].materiais.push({
+                tipo: file.type.includes('pdf') ? 'pdf' : 'outro',
+                nome: file.name,
+                link: data.url
+            });
+
+            renderizarEditorSemanas();
+
+        } catch (e) {
+            statusText.innerText = "Erro ao enviar arquivo.";
+            icon.className = "ri-error-warning-line text-red";
+            console.error("Erro no upload do Drive:", e);
+            alert("Falha no envio do arquivo. Verifique a consola para mais detalhes.");
         }
-
-        const downloadURL = data.secure_url;
-
-        if (!semanasGerais[idxSemana].dias[idxDia].materiais) {
-            semanasGerais[idxSemana].dias[idxDia].materiais = [];
-        }
-
-        semanasGerais[idxSemana].dias[idxDia].materiais.push({
-            tipo: file.type.includes('pdf') ? 'pdf' : 'outro',
-            nome: file.name,
-            link: downloadURL
-        });
-
-        renderizarEditorSemanas();
-
-    } catch (e) {
-        statusText.innerText = "Erro ao enviar arquivo.";
-        icon.className = "ri-error-warning-line text-red";
-        console.error("Erro no upload Cloudinary:", e);
-        alert("Falha no envio. Verifique a internet e o preset do Cloudinary.");
-    }
+    };
 };
 
 async function salvarSemanas() {
