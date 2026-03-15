@@ -5,7 +5,6 @@ import { doc, getDoc, updateDoc, collection, addDoc, getDocs, query, orderBy } f
 
 let currentUser = null;
 
-// Base de Dados Local
 let userData = {
     xpTotal: 0,
     dailyStudyGoal: 60,
@@ -19,7 +18,6 @@ let userData = {
 };
 let studySessions = [];
 let subjects = [];
-let studyChartInstance = null;
 
 const difficultyMap = {
     'easy': { label: 'Fácil', xp: 30, colorClass: 'badge-easy', colorStyle: 'color: #0f7b6c; background: #e5f5e0;' },
@@ -79,7 +77,6 @@ const GamificationEngine = {
             const lastDate = new Date(userData.lastDate);
             lastDate.setHours(0, 0, 0, 0);
             
-            // Verifica a diferença real em dias para quebrar os hábitos corretamente
             const diffTime = Math.abs(today - lastDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -87,7 +84,6 @@ const GamificationEngine = {
             userData.tasks.forEach(t => t.completed = false);
 
             userData.habits.forEach(h => {
-                // Se falhou mais de 1 dia, ou se falhou ontem, o streak zera.
                 if (diffDays > 1 || !h.completedToday) {
                     h.streak = 0;
                 }
@@ -96,7 +92,7 @@ const GamificationEngine = {
 
             userData.lastDate = todayStr;
             this.logHistory("Novo dia! Missões e progresso diário resetados.", "ri-sun-line");
-            return true; // Indica que houve mudança e precisa salvar
+            return true;
         }
         return false;
     },
@@ -202,12 +198,11 @@ async function salvarDadosRPG() {
 }
 
 // =====================================
-// RENDERIZAÇÃO DA INTERFACE
+// RENDERIZAÇÃO DA INTERFACE GERAL
 // =====================================
 function atualizarInterfaceGlobal() {
     document.getElementById('aluno-nome').innerText = userData.nome || "Aluno";
     
-    // Calcula Nível Atual e Progresso da Barra
     const currentLevel = Math.floor(userData.xpTotal / 1000) + 1;
     document.getElementById('aluno-nivel').innerText = `Lvl ${currentLevel} • XP: ${userData.xpTotal}`;
     document.getElementById('today-xp').innerText = `+${userData.dailyXp} XP Hoje`;
@@ -366,7 +361,7 @@ window.removerAttr = function (id) {
 };
 
 // =====================================
-// TRILHA DE AULAS
+// TRILHA DE AULAS (Com correção de texto)
 // =====================================
 async function carregarTrilhaDoFirestore() {
     const container = document.getElementById('semanas-container');
@@ -394,7 +389,7 @@ async function carregarTrilhaDoFirestore() {
                                     mats += `<a href="${m.link}" target="_blank" style="display:block; padding:8px; border:1px solid var(--border-color); border-radius:4px; margin-top:8px; text-decoration:none; color:var(--text-main);"><i class="ri-attachment-line text-yellow"></i> ${m.nome}</a>`; 
                                 });
                             }
-                            diasHTML += `<div style="margin-top:16px; padding:16px; background:var(--bg-main); border-radius:4px; border-left:3px solid var(--yellow);"><h5 style="margin-bottom:8px; color:var(--text-main);"><i class="ri-calendar-check-line text-yellow"></i> ${dia.nome}</h5><p style="font-size:0.85rem; color:var(--text-sub);">${dia.texto}</p>${mats}</div>`;
+                            diasHTML += `<div style="margin-top:16px; padding:16px; background:var(--bg-main); border-radius:4px; border-left:3px solid var(--yellow);"><h5 style="margin-bottom:8px; color:var(--text-main);"><i class="ri-calendar-check-line text-yellow"></i> ${dia.nome}</h5><p style="font-size:0.85rem; color:var(--text-sub); white-space: pre-wrap; word-break: break-word;">${dia.texto}</p>${mats}</div>`;
                         }
                     });
                 }
@@ -415,7 +410,7 @@ async function carregarTrilhaDoFirestore() {
 }
 
 // =====================================
-// SALA DE ESTUDOS E CRONÓMETRO (Atualizado para 2º Plano)
+// SALA DE ESTUDOS: NOVO LAYOUT E LÓGICA
 // =====================================
 function renderSubjectSelect() {
     const select = document.getElementById('timer-subject-select');
@@ -428,49 +423,53 @@ let streakMultiplier = 1.0;
 
 function atualizarEstatisticasEstudos() {
     const subjectData = {};
-    const subjectColors = {};
     let totalMinutes = 0;
     let minutesToday = 0;
     const todayStr = new Date().toDateString();
 
     studySessions.forEach(s => {
-        if (!subjectData[s.subject]) {
-            subjectData[s.subject] = 0;
-            subjectColors[s.subject] = s.subjectColor || '#8B6508';
-        }
+        if (!subjectData[s.subject]) subjectData[s.subject] = 0;
         subjectData[s.subject] += s.duration;
         totalMinutes += s.duration;
-        if (new Date(s.timestamp).toDateString() === todayStr) minutesToday += s.duration;
+        if (new Date(s.timestamp).toDateString() === todayStr) {
+            minutesToday += s.duration;
+        }
     });
 
-    document.getElementById('total-study-time').innerText = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
-    const goalPercent = Math.min((minutesToday / (userData.dailyStudyGoal || 60)) * 100, 100);
-    document.getElementById('goal-progress-bar').style.width = `${goalPercent}%`;
+    const totalH = Math.floor(totalMinutes / 60);
+    const totalM = totalMinutes % 60;
+    document.getElementById('total-study-time-estudei').innerText = `${totalH}h ${totalM}min`;
 
-    const canvas = document.getElementById('studyChart');
-    if (studyChartInstance) studyChartInstance.destroy();
-    studyChartInstance = new Chart(canvas.getContext('2d'), {
-        type: 'bar',
-        data: { 
-            labels: Object.keys(subjectData).length > 0 ? Object.keys(subjectData) : ['Nenhum dado'], 
-            datasets: [{ 
-                data: Object.keys(subjectData).length > 0 ? Object.values(subjectData) : [0], 
-                backgroundColor: Object.keys(subjectData).length > 0 ? Object.keys(subjectData).map(k => subjectColors[k]) : ['#e9e9e7'], 
-                borderRadius: 4 
-            }] 
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    const goal = userData.dailyStudyGoal || 60;
+    const goalPercent = Math.min((minutesToday / goal) * 100, 100);
+    document.getElementById('estudei-meta-bar').style.width = `${goalPercent}%`;
+    document.getElementById('estudei-meta-atual').innerText = `${minutesToday} min / ${goal} min`;
+    document.getElementById('estudei-meta-percent').innerText = `${Math.floor(goalPercent)}%`;
+
+    let tbodyStr = '';
+    Object.keys(subjectData).forEach(subj => {
+        let m = subjectData[subj];
+        let h = Math.floor(m / 60);
+        let remM = m % 60;
+        let timeStr = h > 0 ? `${h}h ${remM}min` : `${remM}min`;
+        
+        tbodyStr += `
+            <tr style="border-bottom: 1px solid var(--border-color); font-size: 0.95rem;">
+                <td style="padding: 16px 24px; color: #0f7b6c; font-weight: 500;">${subj}</td>
+                <td style="padding: 16px 24px; color: var(--text-main);">${timeStr}</td>
+            </tr>`;
     });
+    document.getElementById('estudei-disciplinas-tbody').innerHTML = tbodyStr || `<tr><td colspan="2" style="padding: 16px 24px; color: var(--text-sub);">Nenhum estudo registado ainda.</td></tr>`;
 
     const streakCount = GamificationEngine.calculateStudyStreak();
-
-    document.getElementById('streak-count').innerText = streakCount;
+    document.getElementById('estudei-streak-text').innerText = `${streakCount} dias`;
+    
     streakMultiplier = Math.min(2.0, 1.0 + (streakCount * 0.05));
-    document.getElementById('streak-multiplier-text').innerText = `${streakMultiplier.toFixed(2)}x XP`;
+    document.getElementById('streak-multiplier-text').innerText = `${streakMultiplier.toFixed(2)}x`;
 
-    const streakCont = document.getElementById('streak-days-container');
+    const streakCont = document.getElementById('estudei-streak-timeline');
     streakCont.innerHTML = '';
-    const dayNames = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const studiedDays = new Set(studySessions.map(s => {
@@ -479,11 +478,16 @@ function atualizarEstatisticasEstudos() {
         return d.getTime();
     }));
 
-    for (let i = 6; i >= 0; i--) {
+    for (let i = 20; i >= 0; i--) {
         const d = new Date(today.getTime());
         d.setDate(d.getDate() - i);
         const isStudied = studiedDays.has(d.getTime());
-        streakCont.innerHTML += `<div style="flex:1; aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid ${isStudied ? '#0f7b6c' : 'var(--border-color)'}; background:${isStudied ? '#e5f5e0' : 'var(--bg-main)'}; color:${isStudied ? '#0f7b6c' : 'var(--text-sub)'}; font-size:0.7rem; font-weight:${isStudied ? 'bold' : 'normal'};">${isStudied ? '<i class="ri-check-line"></i>' : dayNames[d.getDay()]}</div>`;
+        
+        if (isStudied) {
+            streakCont.innerHTML += `<div class="estudei-timeline-item success" title="${d.toLocaleDateString('pt-BR')}"><i class="ri-check-line"></i></div>`;
+        } else {
+            streakCont.innerHTML += `<div class="estudei-timeline-item fail" title="${d.toLocaleDateString('pt-BR')}"><i class="ri-close-line"></i></div>`;
+        }
     }
 }
 
@@ -492,7 +496,7 @@ let timerInterval = null,
     currentTimerMode = 'stopwatch',
     countdownTotalSeconds = 0,
     isTimerRunning = false,
-    lastTick = 0; // Guarda o tempo real exato do sistema
+    lastTick = 0; 
 
 function iniciarSalaDeEstudos() {
     const btnPlay = document.getElementById('btn-timer-play');
@@ -571,10 +575,8 @@ function iniciarSalaDeEstudos() {
         btnPause.style.display = 'block';
         btnStop.style.display = 'block';
 
-        // Registamos a hora exata em que o botão Play foi clicado
         lastTick = Date.now();
 
-        // Verifica a cada meio segundo a diferença real no relógio do sistema
         timerInterval = setInterval(() => {
             const now = Date.now();
             const deltaSeconds = Math.floor((now - lastTick) / 1000);
