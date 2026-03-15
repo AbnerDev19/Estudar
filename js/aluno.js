@@ -399,7 +399,6 @@ async function carregarTrilhaDoFirestore() {
                     });
                 }
                 
-                // CORREÇÃO DO BUG: Removido o style="display:none;" da semana-body. O CSS lida com a exibição natural.
                 card.innerHTML = `
                     <div class="semana-header" onclick="if(${sem.liberada}) this.parentElement.classList.toggle('open')" style="padding:16px; border-bottom:1px solid var(--border-color); cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
                         <span class="font-medium"><i class="ri-arrow-right-s-line toggle-icon"></i> ${sem.titulo}</span>${statusBadge}
@@ -416,7 +415,7 @@ async function carregarTrilhaDoFirestore() {
 }
 
 // =====================================
-// SALA DE ESTUDOS E CRONÓMETRO
+// SALA DE ESTUDOS E CRONÓMETRO (Atualizado para 2º Plano)
 // =====================================
 function renderSubjectSelect() {
     const select = document.getElementById('timer-subject-select');
@@ -463,7 +462,6 @@ function atualizarEstatisticasEstudos() {
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
 
-    // Calcular Ofensiva usando o Engine
     const streakCount = GamificationEngine.calculateStudyStreak();
 
     document.getElementById('streak-count').innerText = streakCount;
@@ -489,12 +487,12 @@ function atualizarEstatisticasEstudos() {
     }
 }
 
-// Timer Logic
 let timerInterval = null,
     timerSeconds = 0,
     currentTimerMode = 'stopwatch',
     countdownTotalSeconds = 0,
-    isTimerRunning = false;
+    isTimerRunning = false,
+    lastTick = 0; // Guarda o tempo real exato do sistema
 
 function iniciarSalaDeEstudos() {
     const btnPlay = document.getElementById('btn-timer-play');
@@ -510,6 +508,7 @@ function iniciarSalaDeEstudos() {
         document.getElementById('countdown-setup').style.display = 'none';
         resetTimerUI();
     });
+    
     document.getElementById('tab-countdown').addEventListener('click', (e) => {
         currentTimerMode = 'countdown';
         e.target.classList.add('active');
@@ -526,7 +525,6 @@ function iniciarSalaDeEstudos() {
 
             const novaSessao = { subject: subjName, subjectColor: color, duration: mins, timestamp: Date.now() };
             
-            // Ligação Inteligente: Se houver um atributo com o MESMO NOME da matéria estudada, ele ganha XP no atributo também
             const matchingAttr = userData.attributes.find(a => a.name.toLowerCase() === subjName.toLowerCase());
             const targetAttrId = matchingAttr ? matchingAttr.id : 'none';
 
@@ -573,20 +571,32 @@ function iniciarSalaDeEstudos() {
         btnPause.style.display = 'block';
         btnStop.style.display = 'block';
 
+        // Registamos a hora exata em que o botão Play foi clicado
+        lastTick = Date.now();
+
+        // Verifica a cada meio segundo a diferença real no relógio do sistema
         timerInterval = setInterval(() => {
-            if (currentTimerMode === 'stopwatch') {
-                timerSeconds++;
+            const now = Date.now();
+            const deltaSeconds = Math.floor((now - lastTick) / 1000);
+
+            if (deltaSeconds >= 1) {
+                if (currentTimerMode === 'stopwatch') {
+                    timerSeconds += deltaSeconds;
+                } else {
+                    timerSeconds -= deltaSeconds;
+                    if (timerSeconds <= 0) timerSeconds = 0;
+                }
+                
+                lastTick += deltaSeconds * 1000;
                 updateDisplay();
-            } else {
-                timerSeconds--;
-                updateDisplay();
-                if (timerSeconds <= 0) {
+
+                if (currentTimerMode === 'countdown' && timerSeconds <= 0) {
                     clearInterval(timerInterval);
                     isTimerRunning = false;
                     finishSession(Math.floor(countdownTotalSeconds / 60), subjectSelect.value);
                 }
             }
-        }, 1000);
+        }, 500);
     });
 
     btnPause.addEventListener('click', () => {
