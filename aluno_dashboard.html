@@ -49,7 +49,7 @@
                     <button class="icon-btn" id="btn-open-attr" title="Novo Atributo"><i class="ri-add-line"></i></button>
                 </div>
                 <p style="font-size: 0.7rem; color: var(--text-placeholder); margin-bottom: 8px; line-height: 1.3;">Atributos são áreas de evolução (ex: Foco, Lógica). Associe-os às tarefas para subir de nível.</p>
-                <div id="attributes-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;"></div>
+                <div id="attributes-container" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;"></div>
             </div>
 
             <div class="sidebar-block history-block" style="margin-top: 16px;">
@@ -119,11 +119,12 @@
                             <div class="timer-pulse-ring" id="timer-pulse"></div>
                         </div>
 
-                        <div style="margin-bottom: 24px; display: flex; justify-content: center; gap: 8px;">
+                        <div style="margin-bottom: 24px; display: flex; justify-content: center; gap: 8px; align-items: center;">
                             <select id="timer-subject-select" class="notion-input" style="max-width: 240px; text-align: center; cursor: pointer; background: var(--bg-hover); border: none;">
                                 <option value="" disabled selected>O que vais estudar agora?</option>
                             </select>
                             <button class="icon-btn" id="btn-new-subject" title="Nova Matéria" style="background: var(--bg-hover);"><i class="ri-add-line"></i></button>
+                            <button class="icon-btn" id="btn-manage-subjects" title="Gerenciar Matérias" style="background: var(--bg-hover);"><i class="ri-settings-4-line"></i></button>
                         </div>
 
                         <div id="countdown-setup" style="display: none; margin-bottom: 24px; text-align: center;">
@@ -142,7 +143,6 @@
                     </div>
 
                     <div class="study-side-panel">
-                        
                         <div class="premium-card goal-card">
                             <div class="card-header-flex">
                                 <h4 class="card-sm-title">Meta de Hoje</h4>
@@ -170,9 +170,7 @@
                                     <div class="streak-multiplier-badge"><span id="streak-multiplier-text">1.0x</span> XP</div>
                                 </div>
                             </div>
-                            
-                            <div class="elegant-timeline" id="estudei-streak-timeline">
-                                </div>
+                            <div class="elegant-timeline" id="estudei-streak-timeline"></div>
                             <div class="timeline-legend"><span class="dot success"></span> Feito <span class="dot fail" style="margin-left: 12px;"></span> Falha</div>
                         </div>
 
@@ -180,7 +178,6 @@
                             <h4 class="card-sm-title">Tempo Total Investido</h4>
                             <div class="total-time-value" id="total-study-time-estudei">0h 0m</div>
                         </div>
-
                     </div>
 
                     <div class="premium-card disciplines-card">
@@ -193,8 +190,7 @@
                                         <th style="text-align: right;">Tempo Total</th>
                                     </tr>
                                 </thead>
-                                <tbody id="estudei-disciplinas-tbody">
-                                    </tbody>
+                                <tbody id="estudei-disciplinas-tbody"></tbody>
                             </table>
                         </div>
                     </div>
@@ -214,6 +210,20 @@
                 <input type="color" id="input-subject-color" value="#8B6508" style="width: 100%; height: 40px; border: none; cursor: pointer; border-radius: 4px;">
             </div>
             <div class="modal-actions"><button class="btn-cancel close-modal">Cancelar</button><button class="btn-primary" id="save-subject">Criar</button></div>
+        </div>
+    </div>
+
+    <div id="modal-manage-subjects" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex-between mb-3" style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                <h3 class="modal-title" style="margin:0;">Gerenciar Matérias</h3>
+                <button class="icon-btn close-modal"><i class="ri-close-line"></i></button>
+            </div>
+            <div id="manage-subjects-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                </div>
+            <div class="modal-actions">
+                <button class="btn-cancel close-modal" style="width: 100%; background: var(--bg-hover); padding: 10px; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer;">Fechar Painel</button>
+            </div>
         </div>
     </div>
 

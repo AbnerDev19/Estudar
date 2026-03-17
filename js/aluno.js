@@ -1,7 +1,7 @@
 // ARQUIVO: js/aluno.js
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { doc, getDoc, updateDoc, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, updateDoc, collection, addDoc, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentUser = null;
 
@@ -15,7 +15,7 @@ let userData = {
     activities: [],
     attributes: [],
     history: [],
-    courseProgress: {} // ADICIONADO: Controlo de conclusão de aulas
+    courseProgress: {}
 };
 let studySessions = [];
 let subjects = [];
@@ -193,7 +193,7 @@ async function salvarDadosRPG() {
             activities: userData.activities,
             attributes: userData.attributes,
             history: userData.history,
-            courseProgress: userData.courseProgress || {} // Salva o progresso do curso
+            courseProgress: userData.courseProgress || {}
         });
         atualizarInterfaceGlobal();
     } catch (e) { console.error("Erro ao salvar o progresso no Firebase:", e); }
@@ -223,17 +223,36 @@ function atualizarInterfaceGlobal() {
     atualizarEstatisticasEstudos();
 }
 
+// ATUALIZADO: Renderização Completa dos Atributos com Barra de Progresso, Editar e Excluir
 function renderizarAtributos() {
     const cont = document.getElementById('attributes-container');
     cont.innerHTML = '';
+    
+    if (userData.attributes.length === 0) {
+        cont.innerHTML = '<p class="text-sub text-sm">Nenhum atributo criado.</p>';
+        return;
+    }
+
     userData.attributes.forEach(attr => {
         const progressPercent = attr.xp % 100;
         const div = document.createElement('div');
         div.className = 'attr-item';
+        div.style = 'position: relative; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-main); transition: 0.2s;';
+        
         div.innerHTML = `
-            <div class="flex-between text-sm mb-1"><span class="font-medium">${attr.name}</span><span class="text-sub">Lvl ${attr.level}</span></div>
-            <div class="progress-track" style="height:4px;"><div class="progress-fill" style="background:var(--blue); width: ${progressPercent}%"></div></div>
-            <button class="icon-btn" onclick="window.removerAttr('${attr.id}')" style="position:absolute; top:-4px; right:0; color:var(--red);"><i class="ri-close-line"></i></button>
+            <div class="flex-between text-sm mb-2" style="padding-right: 48px;">
+                <span class="font-medium" style="color: var(--text-main);">${attr.name}</span>
+                <span class="text-sub">Lvl ${attr.level} (${progressPercent}/100)</span>
+            </div>
+            
+            <div style="width: 100%; height: 6px; background: var(--bg-hover); border-radius: 4px; overflow: hidden;">
+                <div style="background:var(--yellow); width: ${progressPercent}%; height: 100%; border-radius: 4px; transition: width 0.3s ease;"></div>
+            </div>
+            
+            <div style="position:absolute; top: 6px; right: 8px; display: flex; gap: 4px;">
+                <button class="icon-btn" onclick="window.editarAttr('${attr.id}')" title="Editar Nome" style="padding: 4px; font-size: 1rem;"><i class="ri-edit-line"></i></button>
+                <button class="icon-btn" onclick="window.removerAttr('${attr.id}')" title="Excluir" style="padding: 4px; font-size: 1rem; color:var(--red);"><i class="ri-delete-bin-line"></i></button>
+            </div>
         `;
         cont.appendChild(div);
     });
@@ -357,13 +376,28 @@ window.removerAtividade = function (id) {
     salvarDadosRPG();
 };
 
+// ATUALIZADO: Funções de manipulação de Atributos
 window.removerAttr = function (id) {
-    userData.attributes = userData.attributes.filter(x => x.id !== id);
-    salvarDadosRPG();
+    if(confirm("Tem certeza que deseja apagar este Atributo?")) {
+        userData.attributes = userData.attributes.filter(x => x.id !== id);
+        salvarDadosRPG();
+    }
 };
 
+window.editarAttr = function (id) {
+    const attr = userData.attributes.find(x => x.id === id);
+    if (!attr) return;
+    
+    const novoNome = prompt("Digite o novo nome para o atributo (skill):", attr.name);
+    if (novoNome && novoNome.trim() !== "") {
+        attr.name = novoNome.trim();
+        salvarDadosRPG();
+    }
+};
+
+
 // =====================================
-// TRILHA DE AULAS (Com Verificação de Conclusão)
+// TRILHA DE AULAS
 // =====================================
 async function carregarTrilhaDoFirestore() {
     const container = document.getElementById('semanas-container');
@@ -384,7 +418,6 @@ async function carregarTrilhaDoFirestore() {
                         if ((dia.texto && dia.texto.trim() !== "") || (dia.materiais && dia.materiais.length > 0)) {
                             totalDiasComConteudo++;
                             
-                            // Verifica se o aluno já concluiu este dia
                             let isCompleted = false;
                             if (userData.courseProgress && userData.courseProgress[idxSemana] && userData.courseProgress[idxSemana][idxDia]) {
                                 isCompleted = true;
@@ -398,7 +431,6 @@ async function carregarTrilhaDoFirestore() {
                                 });
                             }
                             
-                            // Define o visual consoante esteja concluído ou não
                             const borderColor = isCompleted ? 'var(--green)' : 'var(--yellow)';
                             const iconColor = isCompleted ? 'text-green' : 'text-yellow';
                             const opacidade = isCompleted ? '0.8' : '1';
@@ -420,7 +452,6 @@ async function carregarTrilhaDoFirestore() {
                     });
                 }
                 
-                // Verifica se a semana toda foi concluída
                 const isWeekCompleted = totalDiasComConteudo > 0 && diasCompletos === totalDiasComConteudo;
                 const weekBadge = isWeekCompleted ? '<span class="badge" style="background:#e5f5e0; color:var(--green); margin-left:8px;"><i class="ri-trophy-line"></i> Semana Completa</span>' : '';
 
@@ -446,7 +477,6 @@ async function carregarTrilhaDoFirestore() {
     }
 }
 
-// Lógica de clicar no Checkbox da Aula
 window.toggleDiaCurso = async function (idxSemana, idxDia) {
     if (!userData.courseProgress) userData.courseProgress = {};
     if (!userData.courseProgress[idxSemana]) userData.courseProgress[idxSemana] = {};
@@ -461,12 +491,12 @@ window.toggleDiaCurso = async function (idxSemana, idxDia) {
     }
 
     await salvarDadosRPG();
-    carregarTrilhaDoFirestore(); // Recarrega para atualizar as badges visuais
+    carregarTrilhaDoFirestore();
 };
 
 
 // =====================================
-// SALA DE ESTUDOS: NOVO LAYOUT E LÓGICA
+// SALA DE ESTUDOS E MATÉRIAS
 // =====================================
 function renderSubjectSelect() {
     const select = document.getElementById('timer-subject-select');
@@ -474,6 +504,65 @@ function renderSubjectSelect() {
     subjects.forEach(sub => { options += `<option value="${sub.name}">${sub.name}</option>`; });
     select.innerHTML = options;
 }
+
+// ADICIONADO: Lógica de Gerenciar, Editar e Excluir Matérias
+let editingSubjectId = null;
+
+function renderManageSubjects() {
+    const list = document.getElementById('manage-subjects-list');
+    if(!list) return;
+    list.innerHTML = '';
+    
+    if(subjects.length === 0) {
+        list.innerHTML = '<p class="text-sub text-sm text-center" style="padding: 12px;">Nenhuma matéria criada.</p>';
+        return;
+    }
+    
+    subjects.forEach(sub => {
+        list.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background: var(--bg-main);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:16px; height:16px; border-radius:4px; background:${sub.color || '#8B6508'};"></div>
+                    <span class="font-medium" style="font-size: 0.95rem; color: var(--text-main);">${sub.name}</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="icon-btn" onclick="window.editarMateria('${sub.id}')" title="Editar Matéria"><i class="ri-edit-line"></i></button>
+                    <button class="icon-btn" onclick="window.excluirMateria('${sub.id}')" title="Excluir Matéria" style="color:var(--red);"><i class="ri-delete-bin-line"></i></button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+window.editarMateria = function(id) {
+    const sub = subjects.find(s => s.id === id);
+    if(!sub) return;
+    
+    editingSubjectId = id;
+    document.getElementById('input-subject-name').value = sub.name;
+    document.getElementById('input-subject-color').value = sub.color || '#8B6508';
+    
+    document.querySelector('#modal-subject .modal-title').innerText = "Editar Matéria";
+    document.getElementById('save-subject').innerText = "Salvar Alterações";
+    
+    // Fecha o modal de gerenciar e abre o de edição
+    document.getElementById('modal-manage-subjects').classList.remove('active');
+    document.getElementById('modal-subject').classList.add('active');
+};
+
+window.excluirMateria = async function(id) {
+    if(confirm("Tem certeza que deseja excluir esta matéria? O seu histórico de tempo de estudos anterior será mantido nos gráficos.")) {
+        try {
+            await deleteDoc(doc(db, "users", currentUser.uid, "subjects", id));
+            subjects = subjects.filter(s => s.id !== id);
+            renderSubjectSelect();
+            renderManageSubjects();
+        } catch(e) {
+            console.error("Erro ao excluir matéria", e);
+            alert("Erro ao excluir matéria. Verifique o console ou as regras do Firestore.");
+        }
+    }
+};
 
 let streakMultiplier = 1.0;
 
@@ -500,10 +589,6 @@ function atualizarEstatisticasEstudos() {
     const goalPercent = Math.min((minutesToday / goal) * 100, 100);
     document.getElementById('estudei-meta-bar').style.width = `${goalPercent}%`;
     document.getElementById('estudei-meta-atual').innerText = `${minutesToday} min / ${goal} min`;
-    
-    // Fallback caso o elemento percent não exista no HTML fornecido
-    const percentElement = document.getElementById('estudei-meta-percent');
-    if (percentElement) percentElement.innerText = `${Math.floor(goalPercent)}%`;
 
     let tbodyStr = '';
     Object.keys(subjectData).forEach(subj => {
@@ -550,12 +635,7 @@ function atualizarEstatisticasEstudos() {
     }
 }
 
-let timerInterval = null,
-    timerSeconds = 0,
-    currentTimerMode = 'stopwatch',
-    countdownTotalSeconds = 0,
-    isTimerRunning = false,
-    lastTick = 0; 
+let timerInterval = null, timerSeconds = 0, currentTimerMode = 'stopwatch', countdownTotalSeconds = 0, isTimerRunning = false, lastTick = 0; 
 
 function iniciarSalaDeEstudos() {
     const btnPlay = document.getElementById('btn-timer-play');
@@ -678,10 +758,10 @@ function iniciarSalaDeEstudos() {
 }
 
 // =====================================
-// MODAIS DE CRIAÇÃO
+// MODAIS DE CRIAÇÃO E LÓGICA
 // =====================================
 function setupModals() {
-    const abres = { 'btn-new-subject': 'modal-subject', 'btn-edit-study-goal': 'modal-study-goal', 'btn-open-attr': 'modal-attr', 'btn-open-task': 'modal-task', 'btn-open-habit': 'modal-habit', 'btn-open-activity': 'modal-activity', 'btn-open-log': 'modal-log' };
+    const abres = { 'btn-edit-study-goal': 'modal-study-goal', 'btn-open-attr': 'modal-attr', 'btn-open-task': 'modal-task', 'btn-open-habit': 'modal-habit', 'btn-open-activity': 'modal-activity', 'btn-open-log': 'modal-log' };
 
     Object.keys(abres).forEach(btn => { 
         if (document.getElementById(btn)) {
@@ -692,7 +772,9 @@ function setupModals() {
     document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => {
         document.querySelectorAll('.modal-overlay').forEach(m => {
             m.classList.remove('active');
-            m.querySelectorAll('input').forEach(i => i.value = '');
+            m.querySelectorAll('input').forEach(i => {
+                if(i.type !== 'color') i.value = '';
+            });
         });
     }));
 
@@ -703,7 +785,23 @@ function setupModals() {
         }
     });
 
-    // CORREÇÃO: Tratamento de erro ao salvar matéria
+    // Lógica para Abrir Modal de Nova Matéria (Resetar para Modo de Criação)
+    document.getElementById('btn-new-subject').addEventListener('click', () => {
+        editingSubjectId = null;
+        document.getElementById('input-subject-name').value = '';
+        document.getElementById('input-subject-color').value = '#8B6508';
+        document.querySelector('#modal-subject .modal-title').innerText = "Nova Matéria";
+        document.getElementById('save-subject').innerText = "Criar";
+        document.getElementById('modal-subject').classList.add('active');
+    });
+
+    // Lógica para Abrir Modal de Gerenciar Matérias
+    document.getElementById('btn-manage-subjects').addEventListener('click', () => {
+        renderManageSubjects();
+        document.getElementById('modal-manage-subjects').classList.add('active');
+    });
+
+    // Salvar/Editar Matéria
     document.getElementById('save-subject').addEventListener('click', async () => {
         const nameInput = document.getElementById('input-subject-name');
         const name = nameInput ? nameInput.value.trim() : '';
@@ -716,21 +814,33 @@ function setupModals() {
             btn.disabled = true;
 
             try {
-                // Tenta gravar no Firebase
-                const ref = await addDoc(collection(db, "users", currentUser.uid, "subjects"), { name, color });
+                if (editingSubjectId) {
+                    // Modo Edição
+                    const subjectRef = doc(db, "users", currentUser.uid, "subjects", editingSubjectId);
+                    await updateDoc(subjectRef, { name, color });
+                    
+                    const subIndex = subjects.findIndex(s => s.id === editingSubjectId);
+                    if (subIndex > -1) {
+                        subjects[subIndex].name = name;
+                        subjects[subIndex].color = color;
+                    }
+                } else {
+                    // Modo Criação
+                    const ref = await addDoc(collection(db, "users", currentUser.uid, "subjects"), { name, color });
+                    subjects.push({ id: ref.id, name, color });
+                }
                 
-                // Atualiza os dados na tela
-                subjects.push({ id: ref.id, name, color });
                 renderSubjectSelect();
                 
-                // Fecha o modal
                 if(nameInput) nameInput.value = '';
                 document.querySelector('#modal-subject .close-modal').click();
+                
+                editingSubjectId = null; 
             } catch (e) {
-                console.error("Erro ao criar matéria:", e);
-                alert("Ocorreu um erro ao criar a disciplina. Verifica se as regras do teu banco de dados (Firestore Rules) permitem a escrita.");
+                console.error("Erro ao salvar matéria:", e);
+                alert("Ocorreu um erro ao salvar a disciplina. Verifica as regras do teu Firebase Firestore.");
             } finally {
-                btn.innerHTML = 'Criar';
+                btn.innerHTML = editingSubjectId ? 'Salvar Alterações' : 'Criar';
                 btn.disabled = false;
             }
         } else {
@@ -738,6 +848,7 @@ function setupModals() {
         }
     });
 
+    // Outros botões de salvar
     document.getElementById('save-study-goal').addEventListener('click', () => {
         const goal = parseInt(document.getElementById('input-study-goal').value);
         if (goal) {
