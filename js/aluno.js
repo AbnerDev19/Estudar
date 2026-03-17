@@ -14,7 +14,8 @@ let userData = {
     habits: [],
     activities: [],
     attributes: [],
-    history: []
+    history: [],
+    courseProgress: {}
 };
 let studySessions = [];
 let subjects = [];
@@ -191,12 +192,12 @@ async function salvarDadosRPG() {
             habits: userData.habits,
             activities: userData.activities,
             attributes: userData.attributes,
-            history: userData.history
+            history: userData.history,
+            courseProgress: userData.courseProgress || {} // <-- ADICIONE ESTA LINHA
         });
         atualizarInterfaceGlobal();
     } catch (e) { console.error("Erro ao salvar o progresso no Firebase:", e); }
 }
-
 // =====================================
 // RENDERIZAÇÃO DA INTERFACE GERAL
 // =====================================
@@ -363,6 +364,9 @@ window.removerAttr = function (id) {
 // =====================================
 // TRILHA DE AULAS (Com correção de texto)
 // =====================================
+// =====================================
+// TRILHA DE AULAS (Com Verificação de Conclusão)
+// =====================================
 async function carregarTrilhaDoFirestore() {
     const container = document.getElementById('semanas-container');
     try {
@@ -372,31 +376,66 @@ async function carregarTrilhaDoFirestore() {
         if (docSnap.exists() && docSnap.data().semanas) {
             container.innerHTML = '';
             
-            docSnap.data().semanas.forEach(sem => {
-                const card = document.createElement('div');
-                card.className = `semana-card ${sem.liberada ? 'unlocked' : 'locked'}`;
-                const statusBadge = sem.liberada 
-                    ? '<span class="badge" style="background:#e5f5e0; color:var(--green);">Liberado</span>' 
-                    : '<span class="badge" style="background:#fdeceb; color:var(--red);"><i class="ri-lock-line"></i> Bloqueado</span>';
-
+            docSnap.data().semanas.forEach((sem, idxSemana) => {
                 let diasHTML = '';
+                let totalDiasComConteudo = 0;
+                let diasCompletos = 0;
+
                 if (sem.liberada && sem.dias) {
-                    sem.dias.forEach(dia => {
+                    sem.dias.forEach((dia, idxDia) => {
                         if ((dia.texto && dia.texto.trim() !== "") || (dia.materiais && dia.materiais.length > 0)) {
+                            totalDiasComConteudo++;
+                            
+                            // Verifica se o aluno já concluiu este dia
+                            let isCompleted = false;
+                            if (userData.courseProgress && userData.courseProgress[idxSemana] && userData.courseProgress[idxSemana][idxDia]) {
+                                isCompleted = true;
+                                diasCompletos++;
+                            }
+
                             let mats = '';
                             if (dia.materiais) {
                                 dia.materiais.forEach(m => { 
                                     mats += `<a href="${m.link}" target="_blank" style="display:block; padding:8px; border:1px solid var(--border-color); border-radius:4px; margin-top:8px; text-decoration:none; color:var(--text-main);"><i class="ri-attachment-line text-yellow"></i> ${m.nome}</a>`; 
                                 });
                             }
-                            diasHTML += `<div style="margin-top:16px; padding:16px; background:var(--bg-main); border-radius:4px; border-left:3px solid var(--yellow);"><h5 style="margin-bottom:8px; color:var(--text-main);"><i class="ri-calendar-check-line text-yellow"></i> ${dia.nome}</h5><p style="font-size:0.85rem; color:var(--text-sub); white-space: pre-wrap; word-break: break-word;">${dia.texto}</p>${mats}</div>`;
+                            
+                            // Define o visual se estiver concluído ou não
+                            const borderColor = isCompleted ? 'var(--green)' : 'var(--yellow)';
+                            const iconColor = isCompleted ? 'text-green' : 'text-yellow';
+                            const opacidade = isCompleted ? '0.8' : '1';
+
+                            diasHTML += `
+                            <div style="margin-top:16px; padding:16px; background:var(--bg-main); border-radius:4px; border-left:3px solid ${borderColor}; opacity: ${opacidade}; transition: 0.3s;">
+                                <h5 style="margin-bottom:8px; color:var(--text-main);"><i class="ri-calendar-check-line ${iconColor}"></i> ${dia.nome}</h5>
+                                <p style="font-size:0.85rem; color:var(--text-sub); white-space: pre-wrap; word-break: break-word;">${dia.texto}</p>
+                                ${mats}
+                                
+                                <div style="margin-top: 16px; border-top: 1px dashed var(--border-color); padding-top: 12px;">
+                                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; color:var(--text-sub); font-weight: 500;">
+                                        <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="window.toggleDiaCurso(${idxSemana}, ${idxDia})" style="width:18px; height:18px; accent-color: var(--green);">
+                                        ${isCompleted ? '<span class="text-green"><i class="ri-check-double-line"></i> Dia Concluído</span>' : 'Marcar como concluído (+30 XP)'}
+                                    </label>
+                                </div>
+                            </div>`;
                         }
                     });
                 }
                 
+                // Verifica se a semana toda foi concluída
+                const isWeekCompleted = totalDiasComConteudo > 0 && diasCompletos === totalDiasComConteudo;
+                const weekBadge = isWeekCompleted ? '<span class="badge" style="background:#e5f5e0; color:var(--green); margin-left:8px;"><i class="ri-trophy-line"></i> Semana Completa</span>' : '';
+
+                const card = document.createElement('div');
+                card.className = `semana-card ${sem.liberada ? 'unlocked' : 'locked'}`;
+                const statusBadge = sem.liberada 
+                    ? `<span class="badge" style="background:#fdfaf3; color:var(--yellow); border:1px solid var(--yellow);">Progresso: ${diasCompletos}/${totalDiasComConteudo}</span>` 
+                    : '<span class="badge" style="background:#fdeceb; color:var(--red);"><i class="ri-lock-line"></i> Bloqueado</span>';
+
                 card.innerHTML = `
                     <div class="semana-header" onclick="if(${sem.liberada}) this.parentElement.classList.toggle('open')" style="padding:16px; border-bottom:1px solid var(--border-color); cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                        <span class="font-medium"><i class="ri-arrow-right-s-line toggle-icon"></i> ${sem.titulo}</span>${statusBadge}
+                        <span class="font-medium"><i class="ri-arrow-right-s-line toggle-icon"></i> ${sem.titulo} ${weekBadge}</span>
+                        ${statusBadge}
                     </div>
                     <div class="semana-body" style="padding:16px; background:var(--bg-sidebar);">
                         ${diasHTML === '' && sem.liberada ? '<p class="text-sub text-sm">Nenhum conteúdo adicionado nesta semana.</p>' : diasHTML}
@@ -408,6 +447,24 @@ async function carregarTrilhaDoFirestore() {
         container.innerHTML = '<p class="text-red">Erro ao carregar a trilha do curso.</p>'; 
     }
 }
+
+// Lógica de clicar no Checkbox da Aula
+window.toggleDiaCurso = async function (idxSemana, idxDia) {
+    if (!userData.courseProgress) userData.courseProgress = {};
+    if (!userData.courseProgress[idxSemana]) userData.courseProgress[idxSemana] = {};
+
+    const wasCompleted = userData.courseProgress[idxSemana][idxDia];
+    userData.courseProgress[idxSemana][idxDia] = !wasCompleted;
+
+    if (!wasCompleted) {
+        GamificationEngine.addXP(30, 'none', `Concluiu o dia ${idxDia + 1} da Trilha`, "ri-check-double-line");
+    } else {
+        GamificationEngine.removeXP(30, 'none', `Desmarcou o dia ${idxDia + 1} da Trilha`, "ri-arrow-go-back-line");
+    }
+
+    await salvarDadosRPG();
+    carregarTrilhaDoFirestore(); // Recarrega para atualizar as badges visuais
+};  
 
 // =====================================
 // SALA DE ESTUDOS: NOVO LAYOUT E LÓGICA

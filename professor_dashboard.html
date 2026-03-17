@@ -10,13 +10,11 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/professor.css">
     <style>
-        /* Ajuste para o amarelo escuro preferido conforme suas instruções anteriores */
         :root {
             --yellow: #8B6508;
             --yellow-hover: #6b4d06;
         }
 
-        /* Layout centralizado para o conteúdo do professor */
         .main-content-wrapper {
             flex: 1;
             padding: 40px 60px;
@@ -87,14 +85,14 @@
                     <p class="text-sub">Acompanhe o progresso e nível de cada estudante.</p>
                 </header>
 
-                <div class="study-stats-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 24px;">
-                    <div class="study-card">
-                        <h4>Total de Matriculados</h4>
-                        <div class="big-number" id="stat-total-alunos">0</div>
+                <div class="study-stats-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 24px; display: grid; gap: 16px;">
+                    <div class="study-card" style="padding: 20px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                        <h4 style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 8px;">Total de Matriculados</h4>
+                        <div class="big-number" id="stat-total-alunos" style="font-size: 2rem; font-weight: 700; color: var(--yellow);">0</div>
                     </div>
-                    <div class="study-card">
-                        <h4>Média de Nível</h4>
-                        <div class="big-number" id="stat-media-nivel">Lvl 0</div>
+                    <div class="study-card" style="padding: 20px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                        <h4 style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 8px;">Média de Nível</h4>
+                        <div class="big-number" id="stat-media-nivel" style="font-size: 2rem; font-weight: 700; color: var(--yellow);">Lvl 0</div>
                     </div>
                 </div>
 
@@ -103,6 +101,22 @@
             </section>
 
         </main>
+    </div>
+
+    <div id="modal-aluno-detalhes" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px; width: 90%;">
+            <div class="flex-between mb-3" style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" id="modal-aluno-nome" style="margin: 0; color: var(--yellow);">Progresso do Aluno</h3>
+                <button class="icon-btn close-modal"><i class="ri-close-line"></i></button>
+            </div>
+            
+            <div id="modal-aluno-conteudo" style="max-height: 60vh; overflow-y: auto; padding-right: 8px; margin-top: 16px;">
+                </div>
+            
+            <div class="modal-actions" style="margin-top: 24px;">
+                <button class="btn-cancel close-modal" style="width: 100%; padding: 12px; background: var(--bg-hover); border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 500; color: var(--text-main);">Fechar Visualização</button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="js/firebase-config.js"></script>

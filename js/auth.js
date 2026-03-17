@@ -113,20 +113,20 @@ if (registerForm) {
     });
 }
 // Cria o registo base no Firestore
-await setDoc(doc(db, "users", user.uid), {
-    nome: nome,
-    email: email,
-    role: isProfessor ? "professor" : "aluno",
-    dataCadastro: new Date().toISOString(),
-    
-    // --- ESTRUTURA BASE DA GAMIFICAÇÃO (PASSO 5) ---
-    xpTotal: 0,
-    dailyXp: 0,
-    lastDate: new Date().toDateString(),
-    dailyStudyGoal: 60,
-    tasks: [],
-    habits: [],
-    activities: [],
-    attributes: [],
-    history: []
-});
+// Salva os dados no Firestore e define o 'role'
+            await setDoc(doc(db, "users", user.uid), {
+                nome: nome,
+                email: email,
+                role: isProfessor ? "professor" : "aluno",
+                dataCadastro: new Date().toISOString(),
+                xpTotal: 0,
+                dailyXp: 0,
+                lastDate: new Date().toDateString(),
+                dailyStudyGoal: 60,
+                tasks: [],
+                habits: [],
+                activities: [],
+                attributes: [],
+                history: [],
+                courseProgress: {} // <-- ADICIONE ISTO AQUI
+            });

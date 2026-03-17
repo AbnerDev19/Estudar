@@ -21,6 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
         btnNavAlunos.addEventListener('click', () => switchView('alunos'));
     }
 
+    // --- FECHAR MODAIS ---
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+        });
+    });
+
     // --- VERIFICAÇÃO DE AUTENTICAÇÃO E PERMISSÕES ---
     onAuthStateChanged(auth, async(user) => {
         if (user) {
@@ -197,12 +204,10 @@ window.toggleStatus = function(idx, btnElement) {
     semanasGerais[idx].liberada = !semanasGerais[idx].liberada;
     const sem = semanasGerais[idx];
 
-    // Atualiza apenas o botão clicado
     btnElement.style.background = sem.liberada ? 'var(--bg-main)' : 'var(--blue)';
     btnElement.style.color = sem.liberada ? 'var(--text-main)' : 'white';
     btnElement.innerText = sem.liberada ? 'Bloquear Alunos' : 'Liberar para Alunos';
 
-    // Atualiza apenas a badge daquela semana
     const semanaBlock = btnElement.closest('.semana-block');
     const badge = semanaBlock.querySelector('.badge');
 
@@ -226,8 +231,6 @@ window.atualizarTextoDia = function(idxSemana, idxDia, valor) {
 window.removerMaterial = function(idxSemana, idxDia, idxMaterial, btnElement) {
     if (confirm("Tem certeza que deseja remover este arquivo?")) {
         semanasGerais[idxSemana].dias[idxDia].materiais.splice(idxMaterial, 1);
-
-        // Remove do HTML sem recarregar tudo
         const notionItem = btnElement.closest('.notion-item');
         if (notionItem) {
             notionItem.remove();
@@ -235,7 +238,6 @@ window.removerMaterial = function(idxSemana, idxDia, idxMaterial, btnElement) {
     }
 };
 
-// FUNÇÃO DE UPLOAD USANDO O GOOGLE APPS SCRIPT (COM INSERÇÃO DIRETA NA TELA)
 window.fazerUpload = function(idxSemana, idxDia, inputElement) {
     const file = inputElement.files[0];
     if (!file) return;
@@ -285,7 +287,6 @@ window.fazerUpload = function(idxSemana, idxDia, inputElement) {
                 link: data.url
             });
 
-            // Cria o elemento do novo ficheiro e insere-o na ecrã diretamente
             const containerMateriais = document.getElementById(`container-materiais-${idxSemana}-${idxDia}`);
             const matIdx = semanasGerais[idxSemana].dias[idxDia].materiais.length - 1;
             const iconMat = file.type.includes('pdf') ? 'ri-file-pdf-line' : 'ri-attachment-line';
@@ -305,7 +306,6 @@ window.fazerUpload = function(idxSemana, idxDia, inputElement) {
 
             containerMateriais.insertBefore(div, containerMateriais.querySelector('.upload-zone'));
 
-            // Restaura o ícone de upload ao estado original
             statusText.innerText = `Anexar material para ${semanasGerais[idxSemana].dias[idxDia].nome}`;
             icon.className = "ri-upload-cloud-2-line";
 
@@ -361,8 +361,8 @@ async function carregarAlunos() {
         let totalAlunos = 0;
         let somaNiveis = 0;
 
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
+        querySnapshot.forEach(docSnap => {
+            const data = docSnap.data();
 
             if (data.role === 'aluno') {
                 totalAlunos++;
@@ -375,8 +375,9 @@ async function carregarAlunos() {
 
                 const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nome || 'Aluno')}&background=f7f7f5&color=8B6508`;
 
+                // ADICIONADO: cursor pointer e evento onclick para abrir o modal
                 container.innerHTML += `
-                    <div class="aluno-card" style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px; display: flex; align-items: flex-start; gap: 12px;">
+                    <div class="aluno-card" style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px; display: flex; align-items: flex-start; gap: 12px; cursor: pointer;" onclick="window.abrirDetalhesAluno('${docSnap.id}', '${data.nome || 'Aluno Sem Nome'}')">
                         <img src="${avatarUrl}" class="aluno-avatar" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%;">
                         <div class="aluno-info" style="flex: 1;">
                             <div class="aluno-name" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${data.nome || 'Aluno Sem Nome'}</div>
@@ -408,5 +409,77 @@ async function carregarAlunos() {
     } catch (e) {
         console.error("Erro ao carregar lista de alunos:", e);
         container.innerHTML = `<p class="text-red">Erro de permissão ao carregar alunos. Verifica o Firestore.</p>`;
+    }
+}
+
+// ==========================================
+// VISUALIZAÇÃO DO PROGRESSO DO ALUNO (NOVO)
+// ==========================================
+window.abrirDetalhesAluno = async function(uid, nomeAluno) {
+    document.getElementById('modal-aluno-nome').innerText = `Progresso: ${nomeAluno}`;
+    const conteudo = document.getElementById('modal-aluno-conteudo');
+    conteudo.innerHTML = '<p class="text-sub" style="text-align:center; padding: 20px;"><i class="ri-loader-4-line spin text-yellow" style="font-size: 1.5rem;"></i><br>Carregando dados do aluno...</p>';
+    document.getElementById('modal-aluno-detalhes').classList.add('active');
+
+    try {
+        const alunoSnap = await getDoc(doc(db, "users", uid));
+        if (!alunoSnap.exists()) throw new Error("Aluno não encontrado");
+        
+        const progresso = alunoSnap.data().courseProgress || {};
+
+        let html = '';
+        semanasGerais.forEach((sem, idxSemana) => {
+            let diasHtml = '';
+            let totalDias = 0;
+            let diasCompletos = 0;
+
+            sem.dias.forEach((dia, idxDia) => {
+                // Apenas conta e exibe os dias que o professor adicionou conteúdo (texto ou arquivos)
+                if ((dia.texto && dia.texto.trim() !== "") || (dia.materiais && dia.materiais.length > 0)) {
+                    totalDias++;
+                    const isCompleted = progresso[idxSemana] && progresso[idxSemana][idxDia];
+                    if (isCompleted) diasCompletos++;
+                    
+                    const icon = isCompleted ? '<i class="ri-checkbox-circle-fill text-green"></i>' : '<i class="ri-checkbox-blank-circle-line" style="color: var(--border-color);"></i>';
+                    const colorClass = isCompleted ? 'var(--text-main)' : 'var(--text-sub)';
+                    const textStrike = isCompleted ? 'text-decoration: line-through; opacity: 0.8;' : '';
+                    
+                    diasHtml += `
+                        <div style="padding: 10px 0; display:flex; gap:12px; align-items:center; font-size:0.95rem; color: ${colorClass}; border-bottom: 1px dashed var(--bg-hover);">
+                            <span style="font-size: 1.2rem;">${icon}</span> 
+                            <span style="${textStrike}">${dia.nome}</span>
+                        </div>`;
+                }
+            });
+
+            // Só renderiza a semana no modal se ela tiver alguma aula criada
+            if (totalDias > 0) {
+                const isWeekCompleted = diasCompletos === totalDias;
+                const badge = isWeekCompleted 
+                    ? '<span class="badge" style="background:var(--green); color:white;"><i class="ri-check-double-line"></i> Completa</span>' 
+                    : `<span class="badge" style="background:var(--bg-select); color:var(--blue);">${diasCompletos}/${totalDias} concluídos</span>`;
+                
+                html += `
+                    <div style="margin-bottom: 16px; padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-sidebar);">
+                        <div class="flex-between" style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            <strong style="color: var(--text-main); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="ri-folder-open-line text-yellow"></i> ${sem.titulo}
+                            </strong> 
+                            ${badge}
+                        </div>
+                        <div style="background: var(--bg-main); padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                            ${diasHtml}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        if (html === '') html = '<p class="text-sub" style="text-align:center;">O curso ainda não possui conteúdos estruturados para exibição.</p>';
+        conteudo.innerHTML = html;
+
+    } catch(e) {
+        console.error(e);
+        conteudo.innerHTML = '<p class="text-red" style="text-align:center;">Erro ao carregar o histórico de aulas do aluno.</p>';
     }
 }
