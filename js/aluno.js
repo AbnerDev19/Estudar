@@ -15,7 +15,7 @@ let userData = {
     activities: [],
     attributes: [],
     history: [],
-    courseProgress: {}
+    courseProgress: {} // ADICIONADO: Controlo de conclusão de aulas
 };
 let studySessions = [];
 let subjects = [];
@@ -193,11 +193,12 @@ async function salvarDadosRPG() {
             activities: userData.activities,
             attributes: userData.attributes,
             history: userData.history,
-            courseProgress: userData.courseProgress || {} // <-- ADICIONE ESTA LINHA
+            courseProgress: userData.courseProgress || {} // Salva o progresso do curso
         });
         atualizarInterfaceGlobal();
     } catch (e) { console.error("Erro ao salvar o progresso no Firebase:", e); }
 }
+
 // =====================================
 // RENDERIZAÇÃO DA INTERFACE GERAL
 // =====================================
@@ -255,7 +256,7 @@ function renderizarTasks() {
     userData.tasks.forEach(t => {
         cont.innerHTML += `
             <div style="display:flex; align-items:center; padding:12px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:8px; background:var(--bg-main);">
-                <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="window.toggleTask('${t.id}')" style="margin-right:12px; width:18px; height:18px;">
+                <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="window.toggleTask('${t.id}')" style="margin-right:12px; width:18px; height:18px; accent-color: var(--yellow);">
                 <span style="flex:1; ${t.completed ? 'text-decoration:line-through; color:var(--text-sub);' : ''}">${t.name} <span class="badge" style="background:#fdfaf3; border:1px solid var(--yellow); color:var(--yellow); font-size:0.7rem; margin-left:8px;">+${t.xp} XP</span></span>
                 <button class="icon-btn" onclick="window.removerTask('${t.id}')" style="color:var(--text-sub);"><i class="ri-delete-bin-line"></i></button>
             </div>`;
@@ -270,7 +271,7 @@ function renderizarHabits() {
     userData.habits.forEach(h => {
         cont.innerHTML += `
             <div style="display:flex; align-items:center; padding:12px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:8px; background:var(--bg-main);">
-                <input type="checkbox" ${h.completedToday ? 'checked' : ''} onchange="window.toggleHabit('${h.id}')" style="margin-right:12px; width:18px; height:18px;">
+                <input type="checkbox" ${h.completedToday ? 'checked' : ''} onchange="window.toggleHabit('${h.id}')" style="margin-right:12px; width:18px; height:18px; accent-color: var(--yellow);">
                 <span style="flex:1; ${h.completedToday ? 'color:var(--text-sub);' : ''}">${h.name} <span class="badge" style="color:var(--orange); font-size:0.75rem; margin-left:8px;">🔥 ${h.streak} dias</span></span>
                 <button class="icon-btn" onclick="window.removerHabit('${h.id}')" style="color:var(--text-sub);"><i class="ri-delete-bin-line"></i></button>
             </div>`;
@@ -287,7 +288,7 @@ function renderizarAtividades() {
         const dateStr = new Date(a.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
         cont.innerHTML += `
             <div style="display:flex; align-items:center; padding:12px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:8px; background:var(--bg-main);">
-                <input type="checkbox" ${a.completed ? 'checked' : ''} onchange="window.toggleAtividade('${a.id}')" style="margin-right:12px; width:18px; height:18px;">
+                <input type="checkbox" ${a.completed ? 'checked' : ''} onchange="window.toggleAtividade('${a.id}')" style="margin-right:12px; width:18px; height:18px; accent-color: var(--yellow);">
                 <div style="flex:1; ${a.completed ? 'text-decoration:line-through; color:var(--text-sub);' : ''}">
                     <div style="font-weight:500;">${a.name} <span class="badge" style="${dInfo.colorStyle} font-size:0.7rem; padding:2px 6px; border-radius:4px; margin-left:8px;">${dInfo.label}</span></div>
                     <div style="font-size:0.75rem; color:var(--text-sub); margin-top:4px;"><i class="ri-time-line"></i> ${dateStr} • +${a.xp} XP</div>
@@ -362,9 +363,6 @@ window.removerAttr = function (id) {
 };
 
 // =====================================
-// TRILHA DE AULAS (Com correção de texto)
-// =====================================
-// =====================================
 // TRILHA DE AULAS (Com Verificação de Conclusão)
 // =====================================
 async function carregarTrilhaDoFirestore() {
@@ -400,7 +398,7 @@ async function carregarTrilhaDoFirestore() {
                                 });
                             }
                             
-                            // Define o visual se estiver concluído ou não
+                            // Define o visual consoante esteja concluído ou não
                             const borderColor = isCompleted ? 'var(--green)' : 'var(--yellow)';
                             const iconColor = isCompleted ? 'text-green' : 'text-yellow';
                             const opacidade = isCompleted ? '0.8' : '1';
@@ -464,7 +462,8 @@ window.toggleDiaCurso = async function (idxSemana, idxDia) {
 
     await salvarDadosRPG();
     carregarTrilhaDoFirestore(); // Recarrega para atualizar as badges visuais
-};  
+};
+
 
 // =====================================
 // SALA DE ESTUDOS: NOVO LAYOUT E LÓGICA
@@ -501,7 +500,10 @@ function atualizarEstatisticasEstudos() {
     const goalPercent = Math.min((minutesToday / goal) * 100, 100);
     document.getElementById('estudei-meta-bar').style.width = `${goalPercent}%`;
     document.getElementById('estudei-meta-atual').innerText = `${minutesToday} min / ${goal} min`;
-    document.getElementById('estudei-meta-percent').innerText = `${Math.floor(goalPercent)}%`;
+    
+    // Fallback caso o elemento percent não exista no HTML fornecido
+    const percentElement = document.getElementById('estudei-meta-percent');
+    if (percentElement) percentElement.innerText = `${Math.floor(goalPercent)}%`;
 
     let tbodyStr = '';
     Object.keys(subjectData).forEach(subj => {
@@ -541,9 +543,9 @@ function atualizarEstatisticasEstudos() {
         const isStudied = studiedDays.has(d.getTime());
         
         if (isStudied) {
-            streakCont.innerHTML += `<div class="estudei-timeline-item success" title="${d.toLocaleDateString('pt-BR')}"><i class="ri-check-line"></i></div>`;
+            streakCont.innerHTML += `<div class="timeline-dot success" title="${d.toLocaleDateString('pt-BR')}"></div>`;
         } else {
-            streakCont.innerHTML += `<div class="estudei-timeline-item fail" title="${d.toLocaleDateString('pt-BR')}"><i class="ri-close-line"></i></div>`;
+            streakCont.innerHTML += `<div class="timeline-dot fail" title="${d.toLocaleDateString('pt-BR')}"></div>`;
         }
     }
 }
@@ -606,10 +608,11 @@ function iniciarSalaDeEstudos() {
         timerSeconds = 0;
         countdownTotalSeconds = 0;
         display.innerText = "00:00:00";
-        btnPlay.style.display = 'block';
+        btnPlay.style.display = 'flex';
         btnPause.style.display = 'none';
         btnStop.style.display = 'none';
         subjectSelect.disabled = false;
+        document.getElementById('timer-hero-card').classList.remove('is-active');
     }
 
     function updateDisplay() { 
@@ -629,8 +632,9 @@ function iniciarSalaDeEstudos() {
         isTimerRunning = true;
         subjectSelect.disabled = true;
         btnPlay.style.display = 'none';
-        btnPause.style.display = 'block';
-        btnStop.style.display = 'block';
+        btnPause.style.display = 'flex';
+        btnStop.style.display = 'flex';
+        document.getElementById('timer-hero-card').classList.add('is-active');
 
         lastTick = Date.now();
 
@@ -661,8 +665,9 @@ function iniciarSalaDeEstudos() {
     btnPause.addEventListener('click', () => {
         clearInterval(timerInterval);
         isTimerRunning = false;
-        btnPlay.style.display = 'block';
+        btnPlay.style.display = 'flex';
         btnPause.style.display = 'none';
+        document.getElementById('timer-hero-card').classList.remove('is-active');
     });
     
     btnStop.addEventListener('click', () => {
@@ -698,16 +703,38 @@ function setupModals() {
         }
     });
 
+    // CORREÇÃO: Tratamento de erro ao salvar matéria
     document.getElementById('save-subject').addEventListener('click', async () => {
-        const name = document.getElementById('input-subject-name').value;
-        const color = document.getElementById('input-subject-color').value;
+        const nameInput = document.getElementById('input-subject-name');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const colorInput = document.getElementById('input-subject-color');
+        const color = colorInput ? colorInput.value : '#8B6508';
+        const btn = document.getElementById('save-subject');
+
         if (name) {
+            btn.innerHTML = '<i class="ri-loader-4-line spin"></i> A guardar...';
+            btn.disabled = true;
+
             try {
+                // Tenta gravar no Firebase
                 const ref = await addDoc(collection(db, "users", currentUser.uid, "subjects"), { name, color });
+                
+                // Atualiza os dados na tela
                 subjects.push({ id: ref.id, name, color });
                 renderSubjectSelect();
+                
+                // Fecha o modal
+                if(nameInput) nameInput.value = '';
                 document.querySelector('#modal-subject .close-modal').click();
-            } catch (e) {}
+            } catch (e) {
+                console.error("Erro ao criar matéria:", e);
+                alert("Ocorreu um erro ao criar a disciplina. Verifica se as regras do teu banco de dados (Firestore Rules) permitem a escrita.");
+            } finally {
+                btn.innerHTML = 'Criar';
+                btn.disabled = false;
+            }
+        } else {
+            alert("Por favor, introduz um nome para a matéria.");
         }
     });
 
