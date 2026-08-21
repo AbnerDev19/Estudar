@@ -6,7 +6,7 @@ import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.co
 let semanasGerais = [];
 
 // === COLE AQUI O LINK DO GOOGLE APPS SCRIPT (APP DA WEB) ===
-const SCRIPT_URL_GOOGLE_DRIVE = "https://script.google.com/macros/s/AKfycbzHC_iJasQDOpYXJmKWvKA4wQ2pLfqsmoVdvHwhCmJz3lh2mhQZYWKjpDXKRf3onAAIXQ/exec";
+const SCRIPT_URL_GOOGLE_DRIVE = "http://127.0.0.1:5000/upload";
 
 document.addEventListener('DOMContentLoaded', () => {
 
